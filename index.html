@@ -1,3 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Portfolio</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="font.css">
+    <link rel="stylesheet" href="fontello.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" href="#">Your Name</a>
+            <button id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation">☰</button>
+            <nav id="site-nav" class="site-nav">
+                <a href="#about">About</a>
+                <a href="#projects">Projects</a>
+                <a href="#contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section id="hero" class="hero">
+            <div class="container">
+                <h1 class="hero-title">Hi — I'm Your Name</h1>
+                <p class="hero-sub">I build clean, accessible websites and apps.</p>
+                <p><a class="btn" href="#projects">View Work</a></p>
+            </div>
+    </section>
+
+    <section id="about" class="section container">
+            <h2>About</h2>
+            <p>Short bio about you — skills, interests, approach. Keep it concise and focused on what you build.</p>
+        </section>
+        <section id="projects" class="section container projects">
+            <h2>Projects</h2>
+            <div class="grid">
+                <article class="card">
+                    <h3>Project One</h3>
+                    <p>Short description. Link to live demo or repo.</p>
+                </article>
+                <article class="card">
+                    <h3>Project Two</h3>
+                    <p>Short description. Link to live demo or repo.</p>
+                </article>
+                <article class="card">
+                    <h3>Project Three</h3>
+                    <p>Short description. Link to live demo or repo.</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="contact" class="section container">
+            <h2>Contact</h2>
+            <form id="contact-form" class="contact-form" action="send.php" method="post">
+                <label>
+                    <span>Name</span>
+                    <input type="text" name="name" required>
+                </label>
+                <label>
+                    <span>Email</span>
+                    <input type="email" name="email" required>
+                </label>
+                <label>
+                    <span>Message</span>
+                    <textarea name="message" rows="6" required></textarea>
+                </label>
+                <div>
+                    <button class="btn" type="submit">Send</button>
+                </div>
+            </form>
+        </section>
+
+    </main>
+    <footer class="site-footer">
+        <div class="container">
+            <small>&copy; <span id="year"></span> Your Name — Built with care.</small>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
 <!DOCTYPE HTML>
 <html>
 <head>
