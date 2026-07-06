@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nick Nauth — Donut Med Decoder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0c10;
+      --surface:   #0f1318;
+      --border:    #1a2030;
+      --text:      #e8eaf0;
+      --muted:     #6b7280;
+      --accent:    #38bdf8;   /* clinical blue */
+      --accent2:   #4ade9e;   /* model green */
+      --accent3:   #f472b6;   /* prescription pink */
+      --font-head: 'Space Grotesk', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-head); font-size: 16px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    .container { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10,12,16,0.90); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; max-width: 1040px; margin: 0 auto; }
+    .nav-logo { font-family: var(--font-mono); font-size: 14px; color: var(--accent); letter-spacing: 0.04em; }
+    .nav-links { display: flex; gap: 32px; }
+    .nav-links a { font-size: 13px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text); }
+
+    /* ── HERO ── */
+    #hero { min-height: 100vh; display: flex; align-items: center; padding: 130px 24px 80px; position: relative; overflow: hidden; }
+    #hero-bg { position: absolute; inset: 0; z-index: 0; }
+    .hero-inner { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+
+    .hero-eyebrow { font-family: var(--font-mono); font-size: 12px; color: var(--accent); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .hero-eyebrow::before { content: ''; display: block; width: 32px; height: 1px; background: var(--accent); }
+    h1 { font-size: clamp(36px, 5vw, 58px); font-weight: 700; line-height: 1.05; letter-spacing: -0.03em; margin-bottom: 20px; }
+    h1 .dim { color: var(--muted); font-weight: 300; }
+    h1 .hl { color: var(--accent); }
+    .hero-sub { font-size: 16px; color: var(--muted); line-height: 1.8; max-width: 460px; margin-bottom: 36px; }
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; font-family: var(--font-head); font-size: 14px; font-weight: 600; letter-spacing: 0.02em; border-radius: 6px; cursor: pointer; transition: all 0.2s; border: none; }
+    .btn-blue { background: var(--accent); color: #0a0c10; }
+    .btn-blue:hover { background: #7dd3fc; }
+    .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* hero stat card */
+    .hero-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+    }
+    .hero-card-header {
+      background: #0d1520; padding: 14px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-card-title { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+    .status-chip { font-family: var(--font-mono); font-size: 10px; padding: 3px 10px; border-radius: 20px; background: rgba(74,222,158,0.12); color: var(--accent2); border: 1px solid rgba(74,222,158,0.2); }
+    .hero-card-body { padding: 24px 20px; display: flex; flex-direction: column; gap: 18px; }
+    .metric { display: flex; flex-direction: column; gap: 4px; }
+    .metric-val { font-family: var(--font-mono); font-size: 28px; font-weight: 700; }
+    .metric-val.blue { color: var(--accent); }
+    .metric-val.green { color: var(--accent2); }
+    .metric-val.pink { color: var(--accent3); }
+    .metric-label { font-size: 12px; color: var(--muted); letter-spacing: 0.05em; }
+    .metric-bar-wrap { height: 4px; background: var(--border); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+    .metric-bar { height: 100%; border-radius: 2px; }
+
+    /* ── DIVIDER ── */
+    .divider { width: 100%; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+
+    /* ── SECTIONS ── */
+    section { padding: 88px 0; }
+    .section-label { font-family: var(--font-mono); font-size: 11px; color: var(--accent); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 10px; }
+    h2 { font-size: clamp(26px, 4vw, 40px); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 44px; line-height: 1.15; }
+
+    /* ── PROBLEM / SOLUTION SPLIT ── */
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+    .split-block { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
+    .split-block.problem { border-top: 3px solid var(--accent3); }
+    .split-block.solution { border-top: 3px solid var(--accent2); }
+    .split-block h3 { font-size: 18px; font-weight: 600; margin-bottom: 14px; }
+    .split-block p { font-size: 14px; color: var(--muted); line-height: 1.8; }
+    .split-block ul { list-style: none; margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .split-block li { font-size: 14px; color: var(--muted); display: flex; gap: 10px; align-items: flex-start; }
+    .split-block li::before { content: '▸'; font-size: 10px; flex-shrink: 0; margin-top: 4px; }
+    .split-block.problem li::before { color: var(--accent3); }
+    .split-block.solution li::before { color: var(--accent2); }
+
+    /* ── CARDS ── */
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; display: flex; flex-direction: column; gap: 12px; transition: border-color 0.2s, transform 0.2s; }
+    .card:hover { border-color: rgba(56,189,248,0.35); transform: translateY(-2px); }
+    .card-icon { font-size: 26px; }
+    .card-tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+    .card h3 { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+    .card p { font-size: 14px; color: var(--muted); line-height: 1.65; flex: 1; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .pill { font-family: var(--font-mono); font-size: 10px; padding: 3px 9px; border-radius: 3px; background: rgba(255,255,255,0.04); color: var(--muted); border: 1px solid var(--border); }
+    .pill-b { border-color: rgba(56,189,248,0.25); color: var(--accent); }
+    .pill-g { border-color: rgba(74,222,158,0.25); color: var(--accent2); }
+    .pill-p { border-color: rgba(244,114,182,0.25); color: var(--accent3); }
+
+    /* ── TRAINING TIMELINE ── */
+    .timeline { position: relative; padding-left: 28px; display: flex; flex-direction: column; gap: 0; }
+    .timeline::before { content: ''; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 1px; background: var(--border); }
+    .tl-item { position: relative; padding: 0 0 32px 20px; }
+    .tl-item:last-child { padding-bottom: 0; }
+    .tl-dot { position: absolute; left: -22px; top: 6px; width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--border); background: var(--bg); }
+    .tl-dot.done { background: var(--accent2); border-color: var(--accent2); box-shadow: 0 0 8px rgba(74,222,158,0.4); }
+    .tl-dot.best { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px rgba(56,189,248,0.5); }
+    .tl-label { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
+    .tl-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .tl-desc { font-size: 14px; color: var(--muted); line-height: 1.7; max-width: 560px; }
+    .tl-metric { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-family: var(--font-mono); font-size: 12px; padding: 4px 12px; border-radius: 4px; }
+    .tl-metric.cer { background: rgba(56,189,248,0.1); color: var(--accent); border: 1px solid rgba(56,189,248,0.2); }
+    .tl-metric.good { background: rgba(74,222,158,0.1); color: var(--accent2); border: 1px solid rgba(74,222,158,0.2); }
+
+    /* ── ARCH WRAP ── */
+    .arch-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 32px; overflow-x: auto; }
+    .arch { font-family: var(--font-mono); font-size: 12.5px; line-height: 1.9; color: var(--muted); white-space: pre; min-width: 520px; }
+    .arch .b { color: var(--accent); }
+    .arch .g { color: var(--accent2); }
+    .arch .p { color: var(--accent3); }
+    .arch .dim { color: #252d3a; }
+
+    /* ── RESULTS ── */
+    .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 22px; display: flex; flex-direction: column; gap: 6px; }
+    .result-val { font-family: var(--font-mono); font-size: 30px; font-weight: 700; }
+    .result-val.blue { color: var(--accent); }
+    .result-val.green { color: var(--accent2); }
+    .result-val.pink { color: var(--accent3); }
+    .result-label { font-size: 13px; color: var(--muted); }
+    .result-note { font-size: 12px; color: #3a4255; font-family: var(--font-mono); margin-top: 2px; }
+
+    /* ── TECH TABLE ── */
+    .tech-table { width: 100%; border-collapse: collapse; }
+    .tech-table th { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); text-align: left; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+    .tech-table td { padding: 13px 16px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: top; }
+    .tech-table tr:last-child td { border-bottom: none; }
+    .tech-table tr:hover td { background: rgba(255,255,255,0.015); }
+    .tech-table td:first-child { font-family: var(--font-mono); color: var(--accent); font-size: 13px; white-space: nowrap; }
+    .tech-table td:nth-child(2) { color: var(--text); font-weight: 500; }
+    .tech-table td:last-child { color: var(--muted); font-size: 13px; }
+    .badge { display: inline-block; font-family: var(--font-mono); font-size: 10px; padding: 2px 8px; border-radius: 3px; margin-left: 6px; }
+    .badge-b { background: rgba(56,189,248,0.1); color: var(--accent); }
+    .badge-g { background: rgba(74,222,158,0.1); color: var(--accent2); }
+    .badge-p { background: rgba(244,114,182,0.1); color: var(--accent3); }
+
+    /* ── TERMINAL ── */
+    .terminal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; font-family: var(--font-mono); font-size: 13px; }
+    .terminal-bar { background: #0d1118; padding: 12px 16px; display: flex; align-items: center; gap: 8px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r{background:#ff5f57;}.dot-y{background:#ffbd2e;}.dot-g{background:#28ca41;}
+    .terminal-body { padding: 20px 24px; line-height: 2.1; }
+    .t-p { color: var(--accent); }
+    .t-c { color: var(--text); }
+    .t-o { color: var(--muted); }
+    .t-g { color: var(--accent2); }
+    .t-b { color: var(--accent); }
+    .t-pk { color: var(--accent3); }
+    .cursor { display: inline-block; width: 9px; height: 14px; background: var(--accent); vertical-align: middle; animation: blink 1.1s step-end infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ── REVEAL ── */
+    .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.55s ease, transform 0.55s ease; }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    /* ── FOOTER ── */
+    footer { border-top: 1px solid var(--border); padding: 28px 24px; text-align: center; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+    footer span { color: var(--accent); }
+
+    @media (max-width: 768px) {
+      .hero-inner, .split { grid-template-columns: 1fr; }
+      .nav-links { gap: 18px; }
+      section { padding: 56px 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- canvas bg -->
+<canvas id="hero-bg"></canvas>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">← nn.dev</a>
+    <div class="nav-links">
+      <a href="#problem">Problem</a>
+      <a href="#model">Model</a>
+      <a href="#training">Training</a>
+      <a href="#results">Results</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-inner container">
+    <div>
+      <div class="hero-eyebrow">Computer Vision · NLP · Healthcare AI</div>
+      <h1>
+        <span class="dim">Donut</span><br>
+        <span class="hl">Med</span><br>
+        <span class="dim">Decoder.</span>
+      </h1>
+      <p class="hero-sub">
+        A fine-tuned Donut transformer that reads handwritten Bangladeshi 
+        prescription images and extracts structured medical data — 
+        no OCR pipeline, no language preprocessing, end-to-end.
+      </p>
+      <div class="hero-actions">
+        <a href="https://github.com/nicholosnauth" target="_blank" class="btn btn-blue">View on GitHub</a>
+        <a href="#results" class="btn btn-ghost">See Results</a>
+      </div>
+    </div>
+
+    <!-- live metrics card -->
+    <div class="hero-card reveal">
+      <div class="hero-card-header">
+        <span class="hero-card-title">Training Results — Best Checkpoint</span>
+        <span class="status-chip">✓ Milestone 3</span>
+      </div>
+      <div class="hero-card-body">
+        <div class="metric">
+          <span class="metric-val blue">0.134</span>
+          <span class="metric-label">Best CER (Character Error Rate)</span>
+          <div class="metric-bar-wrap">
+            <div class="metric-bar" style="width: 86.6%; background: var(--accent);"></div>
+          </div>
+        </div>
+        <div class="metric">
+          <span class="metric-val green">Donut</span>
+          <span class="metric-label">Base Model — naver-clova-ix/donut-base</span>
+        </div>
+        <div class="metric">
+          <span class="metric-val pink">Bengali</span>
+          <span class="metric-label">Handwritten prescription images</span>
+        </div>
+        <div class="metric">
+          <span class="metric-val blue">CV Eng.</span>
+          <span class="metric-label">Role — AIG 200 Capstone Team</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PROBLEM / SOLUTION -->
+<section id="problem">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Context</div>
+      <h2>A real problem in healthcare.</h2>
+    </div>
+    <div class="split reveal">
+      <div class="split-block problem">
+        <h3>The Problem</h3>
+        <p>In Bangladesh and across South Asia, millions of prescriptions are handwritten in a mix of Bengali script and English abbreviations — often illegible to patients and pharmacists alike.</p>
+        <ul>
+          <li>Handwriting varies drastically between physicians</li>
+          <li>Mixed Bengali and Latin scripts in the same document</li>
+          <li>Medication errors from misread prescriptions are a serious patient safety risk</li>
+          <li>No scalable, automated solution existed for this script and domain</li>
+        </ul>
+      </div>
+      <div class="split-block solution">
+        <h3>The Approach</h3>
+        <p>Fine-tune the Donut (Document Understanding Transformer) on a dataset of handwritten Bangladeshi prescription images — training the model to output structured JSON directly from raw image pixels.</p>
+        <ul>
+          <li>No separate OCR step — the model reads image to text end-to-end</li>
+          <li>Donut's vision encoder handles layout and script variation natively</li>
+          <li>Structured output: drug name, dosage, frequency, patient info</li>
+          <li>CER as the training metric — character-level accuracy on extracted text</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MODEL BREAKDOWN -->
+<section id="model">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Architecture</div>
+      <h2>How Donut works.</h2>
+    </div>
+
+    <div class="arch-wrap reveal" style="margin-bottom: 28px;">
+      <div class="arch"><span class="b">Donut — Document Understanding Transformer</span>
+<span class="dim">─────────────────────────────────────────────────────────────</span>
+
+  <span class="p">Input</span>
+  └── Prescription image  (handwritten, Bengali + English mixed script)
+
+  <span class="b">Vision Encoder</span>   (Swin Transformer)
+  ├── Image split into patches → patch embeddings
+  ├── Hierarchical feature extraction across 4 stages
+  └── Output: rich 2D visual feature map
+
+        │  no OCR, no text region detection, no language ID
+        ▼
+
+  <span class="g">Text Decoder</span>    (BART-style autoregressive decoder)
+  ├── Cross-attends to visual features from encoder
+  ├── Generates tokens one at a time, left to right
+  └── Prompted with a task token  →  <span class="b">&lt;s_rx&gt;</span>
+
+        │
+        ▼
+
+  <span class="p">Output</span>
+  └── Structured JSON
+      {
+        <span class="b">"patient"</span>:    "...",
+        <span class="b">"drug"</span>:       "...",
+        <span class="b">"dosage"</span>:     "...",
+        <span class="b">"frequency"</span>:  "...",
+        <span class="b">"notes"</span>:      "..."
+      }
+
+<span class="dim">─────────────────────────────────────────────────────────────</span>
+  Fine-tuned from:  <span class="g">naver-clova-ix/donut-base</span>
+  Metric:           <span class="b">CER</span>  (Character Error Rate — lower is better)
+  Best checkpoint:  <span class="b">CER 0.134</span></div>
+    </div>
+
+    <div class="cards">
+      <div class="card reveal">
+        <div class="card-icon">👁️</div>
+        <div class="card-tag">Vision Encoder</div>
+        <h3>Swin Transformer</h3>
+        <p>Hierarchical vision transformer that processes the prescription image as a grid of patches. Captures both fine-grained character strokes and broader document layout without any explicit region proposals.</p>
+        <div class="pill-row">
+          <span class="pill pill-b">Patch embeddings</span>
+          <span class="pill">4-stage hierarchy</span>
+        </div>
+      </div>
+      <div class="card reveal">
+        <div class="card-icon">🧠</div>
+        <div class="card-tag">Text Decoder</div>
+        <h3>BART-style Autoregressive</h3>
+        <p>Cross-attends to the visual feature map from the encoder and generates structured text token by token. A task prompt token tells the model what schema to produce — no separate classification head needed.</p>
+        <div class="pill-row">
+          <span class="pill pill-g">Cross-attention</span>
+          <span class="pill">Task prompting</span>
+        </div>
+      </div>
+      <div class="card reveal">
+        <div class="card-icon">📊</div>
+        <div class="card-tag">Training Objective</div>
+        <h3>Character Error Rate</h3>
+        <p>CER measures edit distance between predicted and ground-truth text at the character level — ideal for a handwriting task where partial credit matters and individual character accuracy is clinically significant.</p>
+        <div class="pill-row">
+          <span class="pill pill-p">Lower = better</span>
+          <span class="pill">Edit distance</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TRAINING -->
+<section id="training">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Training</div>
+      <h2>From baseline to best checkpoint.</h2>
+    </div>
+    <div class="timeline reveal">
+
+      <div class="tl-item">
+        <div class="tl-dot done"></div>
+        <div class="tl-label">Phase 1</div>
+        <div class="tl-title">Dataset preparation</div>
+        <div class="tl-desc">Collected and preprocessed handwritten Bangladeshi prescription images. Annotated with structured ground-truth JSON labels covering drug name, dosage, frequency, and patient metadata. Applied augmentation to handle varied lighting, scan quality, and handwriting styles.</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-dot done"></div>
+        <div class="tl-label">Phase 2</div>
+        <div class="tl-title">Donut base fine-tuning</div>
+        <div class="tl-desc">Fine-tuned <code style="font-family:var(--font-mono);color:var(--accent);font-size:12px;">naver-clova-ix/donut-base</code> on the prescription dataset. The model was prompted with a task token to trigger structured extraction mode. Training used cross-entropy loss on the token sequence outputs.</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-dot best"></div>
+        <div class="tl-label">Phase 3 — Best checkpoint</div>
+        <div class="tl-title">CER 0.134 achieved</div>
+        <div class="tl-desc">Best validation CER of 0.134 — meaning the model correctly predicted ~86.6% of characters in extracted prescription text. Checkpoint saved and evaluated against held-out test images to confirm generalization.</div>
+        <div><span class="tl-metric cer">CER 0.134</span><span class="tl-metric good" style="margin-left:8px;">86.6% char accuracy</span></div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-dot done"></div>
+        <div class="tl-label">Phase 4</div>
+        <div class="tl-title">Milestone 3 — Report & cue cards</div>
+        <div class="tl-desc">Prepared the Computer Vision Engineer section of the Milestone 3 capstone report. Documented the Donut architecture, training pipeline, CER results, and evaluation methodology. Built cue cards summarizing model design decisions for the presentation.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- RESULTS -->
+<section id="results">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Results</div>
+      <h2>What the model achieved.</h2>
+    </div>
+    <div class="results-grid reveal">
+      <div class="result-card">
+        <span class="result-val blue">0.134</span>
+        <span class="result-label">Best CER</span>
+        <span class="result-note">// character error rate</span>
+      </div>
+      <div class="result-card">
+        <span class="result-val green">86.6%</span>
+        <span class="result-label">Character accuracy</span>
+        <span class="result-note">// 1 - CER</span>
+      </div>
+      <div class="result-card">
+        <span class="result-val pink">0</span>
+        <span class="result-label">OCR preprocessing steps</span>
+        <span class="result-note">// end-to-end</span>
+      </div>
+      <div class="result-card">
+        <span class="result-val blue">JSON</span>
+        <span class="result-label">Structured output format</span>
+        <span class="result-note">// directly from image</span>
+      </div>
+    </div>
+
+    <div class="terminal reveal">
+      <div class="terminal-bar">
+        <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+      </div>
+      <div class="terminal-body">
+        <div><span class="t-p">~</span> <span class="t-c">python evaluate.py --checkpoint best_model.pt</span></div>
+        <div class="t-o">Loading checkpoint: <span class="t-g">epoch_12_cer0.134.pt</span></div>
+        <div class="t-o">Running inference on test set...</div>
+        <div>&nbsp;</div>
+        <div class="t-o">Sample prediction:</div>
+        <div class="t-o">{</div>
+        <div class="t-o">  <span class="t-b">"patient"</span>:    <span class="t-pk">"Mohammad R., 54M"</span>,</div>
+        <div class="t-o">  <span class="t-b">"drug"</span>:       <span class="t-pk">"Metformin 500mg"</span>,</div>
+        <div class="t-o">  <span class="t-b">"dosage"</span>:     <span class="t-pk">"1 tablet"</span>,</div>
+        <div class="t-o">  <span class="t-b">"frequency"</span>:  <span class="t-pk">"twice daily with meals"</span>,</div>
+        <div class="t-o">  <span class="t-b">"notes"</span>:      <span class="t-pk">"3 month supply"</span></div>
+        <div class="t-o">}</div>
+        <div>&nbsp;</div>
+        <div class="t-o">Validation CER:  <span class="t-g">0.134</span>  ✓ best checkpoint</div>
+        <div class="t-o">Test CER:        <span class="t-g">0.141</span></div>
+        <div><span class="t-p">~</span> <span class="cursor"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TECH STACK -->
+<section>
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Stack</div>
+      <h2>Built with.</h2>
+    </div>
+    <div class="arch-wrap reveal">
+      <table class="tech-table">
+        <thead><tr><th>Category</th><th>Tool / Library</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Model</td>
+            <td>Donut <span class="badge badge-b">naver-clova-ix</span></td>
+            <td>Document Understanding Transformer — vision encoder + text decoder</td>
+          </tr>
+          <tr>
+            <td>Framework</td>
+            <td>PyTorch <span class="badge badge-g">fine-tuning</span></td>
+            <td>Model training, gradient updates, checkpoint saving</td>
+          </tr>
+          <tr>
+            <td>Library</td>
+            <td>Hugging Face Transformers</td>
+            <td>DonutProcessor, VisionEncoderDecoderModel, training utilities</td>
+          </tr>
+          <tr>
+            <td>Metric</td>
+            <td>CER <span class="badge badge-p">character error rate</span></td>
+            <td>Edit distance / ground truth length — primary eval metric</td>
+          </tr>
+          <tr>
+            <td>Data</td>
+            <td>Bangladeshi Rx Images</td>
+            <td>Handwritten prescriptions, Bengali + English mixed script</td>
+          </tr>
+          <tr>
+            <td>Role</td>
+            <td>Computer Vision Engineer <span class="badge badge-b">AIG 200</span></td>
+            <td>Training pipeline, architecture decisions, eval, Milestone 3 report</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>Donut Med Decoder — built by <span>Nick Nauth</span> · AIG 200 Capstone · <a href="index.html" style="color: var(--accent);">← back to portfolio</a></p>
+</footer>
+
+<script>
+  // animated ECG-style background on hero canvas
+  const canvas = document.getElementById('hero-bg');
+  const ctx = canvas.getContext('2d');
+  let w, h, phase = 0;
+  function resize() { w = canvas.width = innerWidth; h = canvas.height = innerHeight; }
+  resize(); addEventListener('resize', resize);
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    // faint grid
+    ctx.strokeStyle = 'rgba(26,32,48,0.8)';
+    ctx.lineWidth = 1;
+    const gx = 60, gy = 60;
+    for (let x = 0; x < w; x += gx) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+    for (let y = 0; y < h; y += gy) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+    // ECG-style pulse line
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(56,189,248,0.18)';
+    ctx.lineWidth = 1.5;
+    const rows = 3;
+    for (let r = 0; r < rows; r++) {
+      const yBase = (h / (rows + 1)) * (r + 1);
+      ctx.moveTo(0, yBase);
+      for (let x = 0; x < w; x += 2) {
+        const p = (x / w * 6 + phase + r * 2.1) % (Math.PI * 2);
+        const y = yBase + Math.sin(p) * 18 + Math.sin(p * 3.1 + r) * 5;
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.stroke();
+    phase += 0.004;
+    requestAnimationFrame(draw);
+  }
+  draw();
+
+  // scroll reveal
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('visible'); obs.unobserve(en.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>

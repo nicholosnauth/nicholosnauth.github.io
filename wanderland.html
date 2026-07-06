@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nick Nauth — Wanderland</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0d0f;
+      --surface:   #10141a;
+      --border:    #1a2030;
+      --text:      #e8eaf0;
+      --muted:     #6b7280;
+      --accent:    #4ade9e;   /* ginkgo green */
+      --accent2:   #7c6af7;   /* aurora violet */
+      --accent3:   #f5c842;   /* spirit gold */
+      --font-head: 'Space Grotesk', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: var(--font-head); font-size: 16px;
+      line-height: 1.65; -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    .container { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10,13,15,0.90); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px; max-width: 1040px; margin: 0 auto;
+    }
+    .nav-logo { font-family: var(--font-mono); font-size: 14px; color: var(--accent); letter-spacing: 0.04em; }
+    .nav-links { display: flex; gap: 32px; }
+    .nav-links a { font-size: 13px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text); }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh; display: flex; align-items: center;
+      padding: 130px 24px 80px; position: relative; overflow: hidden;
+    }
+    /* animated starfield canvas sits behind */
+    #starfield { position: absolute; inset: 0; z-index: 0; }
+    .hero-inner { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; width: 100%; }
+
+    .hero-eyebrow {
+      font-family: var(--font-mono); font-size: 12px;
+      color: var(--accent3); letter-spacing: 0.14em; text-transform: uppercase;
+      margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+    }
+    .hero-eyebrow::before { content: ''; display: block; width: 32px; height: 1px; background: var(--accent3); }
+
+    h1 {
+      font-size: clamp(48px, 8vw, 88px); font-weight: 700;
+      line-height: 0.95; letter-spacing: -0.04em; margin-bottom: 24px;
+    }
+    h1 .line1 { display: block; color: var(--text); }
+    h1 .line2 {
+      display: block;
+      background: linear-gradient(90deg, var(--accent3) 0%, var(--accent) 50%, var(--accent2) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .hero-sub { font-size: 17px; color: var(--muted); line-height: 1.75; max-width: 520px; margin-bottom: 40px; }
+
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 56px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 26px; font-family: var(--font-head);
+      font-size: 14px; font-weight: 600; letter-spacing: 0.02em;
+      border-radius: 6px; cursor: pointer; transition: all 0.2s; border: none;
+    }
+    .btn-gold { background: var(--accent3); color: #0a0d0f; }
+    .btn-gold:hover { background: #f7d76a; }
+    .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--accent3); color: var(--accent3); }
+
+    .hero-stats { display: flex; flex-wrap: wrap; gap: 32px; }
+    .hstat { display: flex; flex-direction: column; gap: 3px; }
+    .hstat-val { font-family: var(--font-mono); font-size: 22px; font-weight: 700; }
+    .hstat-val.g { color: var(--accent); }
+    .hstat-val.v { color: var(--accent2); }
+    .hstat-val.a { color: var(--accent3); }
+    .hstat-label { font-size: 12px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+
+    /* ── SECTIONS ── */
+    section { padding: 88px 0; }
+    .section-label {
+      font-family: var(--font-mono); font-size: 11px; color: var(--accent3);
+      letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 10px;
+    }
+    h2 { font-size: clamp(26px, 4vw, 40px); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 44px; line-height: 1.15; }
+    .divider { width: 100%; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+
+    /* ── FEATURE GRID ── */
+    .features { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    .feat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 28px;
+      display: flex; flex-direction: column; gap: 12px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .feat-card:hover { border-color: rgba(245,200,66,0.3); transform: translateY(-2px); }
+    .feat-icon { font-size: 28px; }
+    .feat-tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent3); }
+    .feat-card h3 { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+    .feat-card p { font-size: 14px; color: var(--muted); line-height: 1.65; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .pill {
+      font-family: var(--font-mono); font-size: 10px; padding: 3px 9px;
+      border-radius: 3px; background: rgba(255,255,255,0.04);
+      color: var(--muted); border: 1px solid var(--border);
+    }
+    .pill-g { border-color: rgba(74,222,158,0.25); color: var(--accent); }
+    .pill-v { border-color: rgba(124,106,247,0.25); color: var(--accent2); }
+    .pill-a { border-color: rgba(245,200,66,0.25); color: var(--accent3); }
+
+    /* ── WORLD MAP (ASCII) ── */
+    .arch-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 32px; overflow-x: auto;
+    }
+    .arch {
+      font-family: var(--font-mono); font-size: 12.5px;
+      line-height: 1.85; color: var(--muted); white-space: pre;
+      min-width: 560px;
+    }
+    .arch .g  { color: var(--accent); }
+    .arch .v  { color: var(--accent2); }
+    .arch .a  { color: var(--accent3); }
+    .arch .dim { color: #2e3648; }
+
+    /* ── MODULE TABLE ── */
+    .mod-table { width: 100%; border-collapse: collapse; }
+    .mod-table th {
+      font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--accent3); text-align: left;
+      padding: 10px 16px; border-bottom: 1px solid var(--border);
+    }
+    .mod-table td { padding: 13px 16px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: top; }
+    .mod-table tr:last-child td { border-bottom: none; }
+    .mod-table tr:hover td { background: rgba(255,255,255,0.015); }
+    .mod-table td:first-child { font-family: var(--font-mono); color: var(--accent); font-size: 13px; white-space: nowrap; }
+    .mod-table td:nth-child(2) { color: var(--text); font-weight: 500; }
+    .mod-table td:last-child { color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .badge {
+      display: inline-block; font-family: var(--font-mono); font-size: 10px;
+      padding: 2px 8px; border-radius: 3px; margin-left: 6px;
+    }
+    .badge-g { background: rgba(74,222,158,0.1); color: var(--accent); }
+    .badge-v { background: rgba(124,106,247,0.1); color: var(--accent2); }
+    .badge-a { background: rgba(245,200,66,0.1); color: var(--accent3); }
+
+    /* ── TECH BREAKDOWN ── */
+    .tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
+    .tech-group {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 22px;
+    }
+    .tech-group-title {
+      font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 14px;
+    }
+    .tech-group ul { list-style: none; }
+    .tech-group li {
+      font-size: 14px; color: var(--muted); padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .tech-group li:last-child { border-bottom: none; }
+    .tech-group li::before { content: '▸'; color: var(--accent3); font-size: 10px; }
+
+    /* ── CONTROLS ── */
+    .controls-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+    .control-row {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 16px 20px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .key {
+      font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+      background: #1e2330; border: 1px solid #2e3648; border-bottom: 3px solid #2e3648;
+      border-radius: 5px; padding: 5px 10px; color: var(--text);
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .control-desc { font-size: 14px; color: var(--muted); }
+
+    /* ── TERMINAL ── */
+    .terminal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; font-family: var(--font-mono); font-size: 13px;
+    }
+    .terminal-bar {
+      background: #141820; padding: 12px 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r{background:#ff5f57;}.dot-y{background:#ffbd2e;}.dot-g{background:#28ca41;}
+    .terminal-body { padding: 20px 24px; line-height: 2.0; }
+    .t-p { color: var(--accent3); }
+    .t-c { color: var(--text); }
+    .t-o { color: var(--muted); }
+    .t-g { color: var(--accent); }
+    .t-v { color: var(--accent2); }
+    .t-a { color: var(--accent3); }
+    .cursor {
+      display: inline-block; width: 9px; height: 14px;
+      background: var(--accent3); vertical-align: middle;
+      animation: blink 1.1s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ── REVEAL ── */
+    .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.55s ease, transform 0.55s ease; }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border); padding: 28px 24px;
+      text-align: center; font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+    }
+    footer span { color: var(--accent3); }
+
+    @media (max-width: 768px) {
+      .nav-links { gap: 18px; }
+      section { padding: 56px 0; }
+      .hero-stats { gap: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">← nn.dev</a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#world">World</a>
+      <a href="#modules">Modules</a>
+      <a href="#controls">Controls</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Browser game · Three.js · ES Modules</div>
+    <h1>
+      <span class="line1">Wander</span>
+      <span class="line2">land.</span>
+    </h1>
+    <p class="hero-sub">
+      A modular 3D open-world browser game set in Neo Valley — ginkgo groves, 
+      retro-futuristic chrome spires, a living day/night cycle, and 20 spirit 
+      lights lost across the map. Built entirely in vanilla Three.js, no game engine.
+    </p>
+    <div class="hero-actions">
+      <a href="wanderland/index.html" class="btn btn-gold">▶ Play Now</a>
+      <a href="https://github.com/nicholosnauth/Portfolio-Website-Blog" target="_blank" class="btn btn-ghost">View Source</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><span class="hstat-val g">Three.js</span><span class="hstat-label">Renderer</span></div>
+      <div class="hstat"><span class="hstat-val a">14</span><span class="hstat-label">ES Modules</span></div>
+      <div class="hstat"><span class="hstat-val v">ACES</span><span class="hstat-label">Tone Mapping</span></div>
+      <div class="hstat"><span class="hstat-val g">16k</span><span class="hstat-label">Grass Instances</span></div>
+      <div class="hstat"><span class="hstat-val a">0</span><span class="hstat-label">Dependencies</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Features</div>
+      <h2>What's in the world.</h2>
+    </div>
+    <div class="features">
+
+      <div class="feat-card reveal">
+        <div class="feat-icon">🌿</div>
+        <div class="feat-tag">Flora</div>
+        <h3>Ginkgo Biloba Groves</h3>
+        <p>380 instanced ginkgo trees with fan-shaped leaf geometry — ~9,900 individual leaf fans in autumn gold and chartreuse. Golden leaves drift down around you during the day.</p>
+        <div class="pill-row">
+          <span class="pill pill-g">Instanced Mesh</span>
+          <span class="pill pill-a">9,900 fan leaves</span>
+        </div>
+      </div>
+
+      <div class="feat-card reveal">
+        <div class="feat-icon">🏙️</div>
+        <div class="feat-tag">Settlement</div>
+        <h3>Retro-Futuristic City</h3>
+        <p>The Aurora Spire — a chrome tripod tower with a glass saucer crown, neon rings, and a pulsing beacon. Six glass dome habitats, a monorail ring with an orbiting tram pod, and three relay pylons across the map.</p>
+        <div class="pill-row">
+          <span class="pill pill-v">PBR Chrome</span>
+          <span class="pill pill-a">Neon emissives</span>
+        </div>
+      </div>
+
+      <div class="feat-card reveal">
+        <div class="feat-icon">🌅</div>
+        <div class="feat-tag">Atmosphere</div>
+        <h3>Dynamic Day / Night</h3>
+        <p>A custom sky shader with a real sun disc, corona glow, and low-angle atmospheric haze. The sun moves on a 5-minute cycle. Clouds drift, stars fade in at dusk, and city windows light up at night.</p>
+        <div class="pill-row">
+          <span class="pill pill-g">GLSL shader</span>
+          <span class="pill">300s cycle</span>
+        </div>
+      </div>
+
+      <div class="feat-card reveal">
+        <div class="feat-icon">💡</div>
+        <div class="feat-tag">Rendering</div>
+        <h3>Filmic PBR Pipeline</h3>
+        <p>ACES filmic tone mapping, 4K shadow maps with normal bias, PBR MeshStandardMaterial throughout, and procedurally generated detail + roughness textures for close-up ground realism.</p>
+        <div class="pill-row">
+          <span class="pill pill-v">ACES filmic</span>
+          <span class="pill pill-g">4K shadows</span>
+          <span class="pill">sRGB encoding</span>
+        </div>
+      </div>
+
+      <div class="feat-card reveal">
+        <div class="feat-icon">🌊</div>
+        <div class="feat-tag">Water</div>
+        <h3>Real Specular Waves</h3>
+        <p>Water is a subdivided plane with vertices displaced by three overlapping sine waves every frame. Normals recomputed live so the PBR material produces real sun glints across the surface.</p>
+        <div class="pill-row">
+          <span class="pill pill-g">CPU wave sim</span>
+          <span class="pill">Live normals</span>
+        </div>
+      </div>
+
+      <div class="feat-card reveal">
+        <div class="feat-icon">🪂</div>
+        <div class="feat-tag">Gameplay</div>
+        <h3>Glider + Stamina</h3>
+        <p>Hold Space while falling to deploy a paraglider and drift off cliff edges. Sprint drains a stamina wheel; hit a relay pylon to recharge. Gliding also drains stamina, turning red when exhausted.</p>
+        <div class="pill-row">
+          <span class="pill pill-a">Stamina ring HUD</span>
+          <span class="pill">Relay recharge</span>
+        </div>
+      </div>
+
+      <div class="feat-card reveal">
+        <div class="feat-icon">🌱</div>
+        <div class="feat-tag">Flora</div>
+        <h3>16k Wind Grass</h3>
+        <p>16,000 instanced grass blades with a custom GLSL vertex shader that drives per-blade sway based on world position and time — no texture, pure geometry and shader math.</p>
+        <div class="pill-row">
+          <span class="pill pill-g">GLSL wind shader</span>
+          <span class="pill">16,000 instances</span>
+        </div>
+      </div>
+
+      <div class="feat-card reveal">
+        <div class="feat-icon">✨</div>
+        <div class="feat-tag">Collectibles</div>
+        <h3>20 Spirit Lights</h3>
+        <p>Glowing orbs scattered across the map — some near relay pylons to reward exploration. Each has a point light, a pulsing halo, and bobs on a sine curve. Collect all 20 to restore the valley.</p>
+        <div class="pill-row">
+          <span class="pill pill-a">Point lights</span>
+          <span class="pill">Additive halo</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- WORLD -->
+<section id="world">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">World</div>
+      <h2>Neo Valley — the map.</h2>
+    </div>
+    <div class="arch-wrap reveal">
+      <div class="arch"><span class="a">Neo Valley  ·  620m radius island  ·  procedurally generated</span>
+
+<span class="dim">╔══════════════════════════════════════════════════════╗</span>
+<span class="dim">║</span>                                                      <span class="dim">║</span>
+<span class="dim">║</span>    <span class="v">[ Relay Pylon β ]</span>         <span class="g">🌿 ginkgo grove</span>          <span class="dim">║</span>
+<span class="dim">║</span>         x: -180                                      <span class="dim">║</span>
+<span class="dim">║</span>         z:  150                                      <span class="dim">║</span>
+<span class="dim">║</span>                                                      <span class="dim">║</span>
+<span class="dim">║</span>   <span class="g">🌊 ocean                   <span class="a">╔══════════════╗</span>           <span class="dim">║</span>
+<span class="dim">║</span>      surrounds               <span class="a">║  SETTLEMENT  ║</span>           <span class="dim">║</span>
+<span class="dim">║</span>      the island              <span class="a">║  x:40  z:-60 ║</span>           <span class="dim">║</span>
+<span class="dim">║</span>                              <span class="a">║  Aurora Spire║</span>           <span class="dim">║</span>
+<span class="dim">║</span>                              <span class="a">║  6 domes     ║</span>           <span class="dim">║</span>
+<span class="dim">║</span>                              <span class="a">║  monorail    ║</span>           <span class="dim">║</span>
+<span class="dim">║</span>        <span class="g">⛰ highlands</span>          <span class="a">╚══════════════╝</span>           <span class="dim">║</span>
+<span class="dim">║</span>                                                      <span class="dim">║</span>
+<span class="dim">║</span>   <span class="v">[ Relay Pylon α ]</span>     <span class="g">🟡 spawn  x:0  z:0</span>           <span class="dim">║</span>
+<span class="dim">║</span>        x: 220                                        <span class="dim">║</span>
+<span class="dim">║</span>        z: 180                                        <span class="dim">║</span>
+<span class="dim">║</span>                                                      <span class="dim">║</span>
+<span class="dim">║</span>              <span class="v">[ Relay Pylon γ ]</span>  <span class="g">🌿 sand beaches</span>        <span class="dim">║</span>
+<span class="dim">║</span>                   x: -120                            <span class="dim">║</span>
+<span class="dim">║</span>                   z: -260                            <span class="dim">║</span>
+<span class="dim">╚══════════════════════════════════════════════════════╝</span>
+
+<span class="a">Biomes</span>
+  <span class="g">Sand</span>      h &lt;  2.2m   — beaches ringing the coast
+  <span class="g">Grass</span>     h &lt; 19.0m   — main valley floor, ginkgo groves, grass fields
+  <span class="a">Rock</span>      h &lt; 32.0m   — exposed cliff faces and highland ridges
+  <span class="dim">Snow</span>      h &gt; 32.0m   — summit caps</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MODULES -->
+<section id="modules">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Architecture</div>
+      <h2>14 ES modules. One shared context.</h2>
+    </div>
+
+    <p class="reveal" style="color: var(--muted); max-width: 620px; margin-bottom: 36px; font-size: 15px; line-height: 1.8;">
+      Every system exposes <code style="font-family: var(--font-mono); color: var(--accent); font-size: 13px;">init(ctx)</code> and <code style="font-family: var(--font-mono); color: var(--accent); font-size: 13px;">update(ctx)</code>.
+      They never import each other's internals — communication happens only through
+      the shared <code style="font-family: var(--font-mono); color: var(--accent3); font-size: 13px;">ctx</code> object. Adding a new system means writing one file and 
+      registering two lines in <code style="font-family: var(--font-mono); color: var(--accent); font-size: 13px;">main.js</code>.
+    </p>
+
+    <div class="arch-wrap reveal" style="margin-bottom: 28px;">
+      <table class="mod-table">
+        <thead>
+          <tr>
+            <th>Module</th>
+            <th>Responsibility</th>
+            <th>Key exports / ctx contract</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>config.js</td>
+            <td>All tunables <span class="badge badge-a">single source</span></td>
+            <td>World size, speeds, counts, day length — change here, everything updates</td>
+          </tr>
+          <tr>
+            <td>noise.js</td>
+            <td>Procedural math <span class="badge badge-g">pure</span></td>
+            <td>hash, fbm, terrainHeight, makeNoiseTexture, scatterSpots</td>
+          </tr>
+          <tr>
+            <td>engine.js</td>
+            <td>Renderer + lighting rig</td>
+            <td>ctx.scene, ctx.camera, ctx.renderer, ctx.sun, ctx.hemi</td>
+          </tr>
+          <tr>
+            <td>sky.js</td>
+            <td>Sky dome, stars, clouds, day/night</td>
+            <td>ctx.time · { timeOfDay, sunUp, duskAmt, night }</td>
+          </tr>
+          <tr>
+            <td>terrain.js</td>
+            <td>Heightmap mesh + biome colors</td>
+            <td>Reads terrainHeight, writes PBR terrain mesh to scene</td>
+          </tr>
+          <tr>
+            <td>water.js</td>
+            <td>Animated wave surface</td>
+            <td>CPU wave sim, recomputes normals every frame</td>
+          </tr>
+          <tr>
+            <td>flora.js</td>
+            <td>Trees, grass, rocks, particles</td>
+            <td>Instanced ginkgos, wind shader grass, leaf/firefly clouds</td>
+          </tr>
+          <tr>
+            <td>settlement.js</td>
+            <td>Spire, domes, monorail, relays</td>
+            <td>Window glow reacts to ctx.time.sunUp, relay checks ctx.player.pos</td>
+          </tr>
+          <tr>
+            <td>player.js</td>
+            <td>Physics, stamina, keyboard</td>
+            <td>ctx.player · { pos, vel, facing, stamina, gliding, onGround }</td>
+          </tr>
+          <tr>
+            <td>character.js</td>
+            <td>Hero mesh + procedural animation</td>
+            <td>Reads ctx.player state, drives limb rotations and glider visibility</td>
+          </tr>
+          <tr>
+            <td>camera.js</td>
+            <td>Third-person orbit follow</td>
+            <td>ctx.cam · { yaw, pitch, dist } — mouse + scroll input</td>
+          </tr>
+          <tr>
+            <td>collectibles.js</td>
+            <td>Spirit lights + pickup</td>
+            <td>Reads ctx.player.pos, calls ctx.hud.toast on collect</td>
+          </tr>
+          <tr>
+            <td>hud.js</td>
+            <td>All DOM</td>
+            <td>ctx.hud · { toast, setStamina, setClock, setOrbs }</td>
+          </tr>
+          <tr>
+            <td>main.js</td>
+            <td>Composition root + game loop <span class="badge badge-a">entry</span></td>
+            <td>Inits systems in order, calls update(ctx) on each per frame</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="terminal reveal">
+      <div class="terminal-bar">
+        <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+      </div>
+      <div class="terminal-body">
+        <div><span class="t-p">~</span> <span class="t-c">cat src/main.js</span></div>
+        <div class="t-o">// init order — engine first, player before systems that read ctx.player</div>
+        <div class="t-o">const systems = [</div>
+        <div class="t-o">  <span class="t-g">engine</span>, <span class="t-g">hud</span>, <span class="t-g">player</span>, <span class="t-g">camera</span>, <span class="t-a">sky</span>, <span class="t-a">terrain</span>,</div>
+        <div class="t-o">  <span class="t-a">water</span>, <span class="t-g">flora</span>, <span class="t-v">settlement</span>, <span class="t-g">character</span>, <span class="t-a">collectibles</span></div>
+        <div class="t-o">];</div>
+        <div class="t-o">for (const s of systems) s.init(ctx);</div>
+        <div>&nbsp;</div>
+        <div class="t-o">// game loop</div>
+        <div class="t-o">function loop() {</div>
+        <div class="t-o">  requestAnimationFrame(loop);</div>
+        <div class="t-o">  ctx.frame = { dt: Math.min(clock.getDelta(), 0.05), t: clock.elapsedTime };</div>
+        <div class="t-o">  for (const s of updaters) s.update(ctx);</div>
+        <div class="t-o">  engine.render(ctx);</div>
+        <div class="t-o">}</div>
+        <div><span class="t-p">~</span> <span class="t-c">python3 -m http.server 8000</span></div>
+        <div class="t-o">Serving HTTP on 0.0.0.0 port 8000 ... <span class="cursor"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TECH -->
+<section>
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Tech</div>
+      <h2>Built with.</h2>
+    </div>
+    <div class="tech-grid">
+      <div class="tech-group reveal">
+        <div class="tech-group-title">Renderer</div>
+        <ul>
+          <li>Three.js r128</li>
+          <li>ACES filmic tone mapping</li>
+          <li>sRGB output encoding</li>
+          <li>PCFSoft shadow maps</li>
+          <li>4K shadow resolution</li>
+        </ul>
+      </div>
+      <div class="tech-group reveal">
+        <div class="tech-group-title">Shaders (GLSL)</div>
+        <ul>
+          <li>Sky dome + sun disc</li>
+          <li>Wind grass vertex shader</li>
+          <li>Procedural noise textures</li>
+          <li>Additive glow blending</li>
+        </ul>
+      </div>
+      <div class="tech-group reveal">
+        <div class="tech-group-title">Performance</div>
+        <ul>
+          <li>Instanced meshes throughout</li>
+          <li>16k grass instances</li>
+          <li>~10k leaf fan instances</li>
+          <li>Frustum culling via Three.js</li>
+        </ul>
+      </div>
+      <div class="tech-group reveal">
+        <div class="tech-group-title">Architecture</div>
+        <ul>
+          <li>Native ES Modules</li>
+          <li>Shared ctx pattern</li>
+          <li>Zero build step</li>
+          <li>Zero npm dependencies</li>
+        </ul>
+      </div>
+      <div class="tech-group reveal">
+        <div class="tech-group-title">Procedural</div>
+        <ul>
+          <li>fBm noise terrain</li>
+          <li>Island falloff mask</li>
+          <li>Biome vertex coloring</li>
+          <li>Deterministic scatter</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CONTROLS -->
+<section id="controls">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Controls</div>
+      <h2>How to play.</h2>
+    </div>
+    <div class="controls-grid reveal">
+      <div class="control-row"><span class="key">W A S D</span><span class="control-desc">Move around the world</span></div>
+      <div class="control-row"><span class="key">SHIFT</span><span class="control-desc">Sprint — drains stamina</span></div>
+      <div class="control-row"><span class="key">SPACE</span><span class="control-desc">Jump</span></div>
+      <div class="control-row"><span class="key">SPACE hold</span><span class="control-desc">Deploy glider while falling</span></div>
+      <div class="control-row"><span class="key">Mouse</span><span class="control-desc">Orbit camera around player</span></div>
+      <div class="control-row"><span class="key">Scroll</span><span class="control-desc">Zoom camera in / out</span></div>
+      <div class="control-row"><span class="key">ESC</span><span class="control-desc">Release mouse cursor</span></div>
+      <div class="control-row"><span class="key">Relay pylon</span><span class="control-desc">Walk up to recharge stamina</span></div>
+    </div>
+
+    <div style="margin-top: 36px; padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;" class="reveal">
+      <div class="section-label" style="margin-bottom: 10px;">Tip</div>
+      <p style="color: var(--muted); font-size: 14px; line-height: 1.75;">
+        Sprint up the plateau to the Aurora Spire and glide off the edge at dusk — 
+        the orange sun disc over the water, the ginkgo canopies catching the last light, 
+        and the spire's neon starting to glow is the best view in the valley.
+        Run the game locally with <code style="font-family: var(--font-mono); color: var(--accent); font-size: 12px;">python3 -m http.server 8000</code> from the project folder.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>Wanderland — built by <span>Nick Nauth</span> · <a href="index.html" style="color: var(--accent3);">← back to portfolio</a></p>
+</footer>
+
+<!-- starfield canvas -->
+<script>
+  // tiny starfield behind the hero
+  const canvas = document.getElementById('starfield');
+  const ctx2d = canvas.getContext('2d');
+  let stars = [];
+  function resize() {
+    canvas.width = innerWidth; canvas.height = innerHeight;
+    stars = Array.from({ length: 160 }, () => ({
+      x: Math.random() * innerWidth, y: Math.random() * innerHeight,
+      r: Math.random() * 1.2 + 0.3, o: Math.random() * 0.5 + 0.1,
+      s: (Math.random() - 0.5) * 0.08
+    }));
+  }
+  resize();
+  addEventListener('resize', resize);
+  function drawStars() {
+    ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+    for (const s of stars) {
+      s.x += s.s; if (s.x < 0) s.x = canvas.width; if (s.x > canvas.width) s.x = 0;
+      ctx2d.beginPath();
+      ctx2d.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx2d.fillStyle = `rgba(245,200,66,${s.o * 0.5})`;
+      ctx2d.fill();
+    }
+    requestAnimationFrame(drawStars);
+  }
+  drawStars();
+
+  // scroll reveal
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('visible'); obs.unobserve(en.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>

@@ -345,8 +345,9 @@
         <div><span class="t-prompt">~</span> <span class="t-cmd">cat stack.txt</span></div>
         <div class="t-out"><span class="t-hl">Android:</span> Kotlin · Jetpack Compose · SDK</div>
         <div class="t-out"><span class="t-hl">iOS:</span> Swift · Xcode · XCTest</div>
-        <div class="t-out"><span class="t-hl">Cross:</span> React Native · Firebase</div>
-        <div class="t-out"><span class="t-hl">Web:</span> HTML · CSS · JS · PHP · SQL</div>
+        <div class="t-out"><span class="t-hl">AI/ML:</span> PyTorch · Keras · HuggingFace</div>
+        <div class="t-out"><span class="t-hl">Deploy:</span> FastAPI · Docker · Cloud Run</div>
+        <div class="t-out"><span class="t-hl">Web:</span> Three.js · React · PHP · SQL</div>
         <div><span class="t-prompt">~</span> <span class="t-cmd">git status</span></div>
         <div class="t-out">On branch main — always building <span class="t-cursor"></span></div>
       </div>
@@ -409,6 +410,72 @@
     </div>
     <div class="projects-grid">
 
+      <!-- ── FEATURED (with dedicated pages) ── -->
+
+      <div class="project-card reveal" style="border-top: 2px solid rgba(74,222,158,0.5);">
+        <div class="project-tag" style="color:#e879a0;">ML · FastAPI · Docker · Cloud Run</div>
+        <h3>Breast Cancer Classifier</h3>
+        <p>Logistic Regression and Random Forest models trained on the Wisconsin dataset, served via FastAPI, containerized with Docker, and deployed to Google Cloud Run — a full production ML pipeline.</p>
+        <div class="project-stack">
+          <span class="stack-pill">scikit-learn</span>
+          <span class="stack-pill">FastAPI</span>
+          <span class="stack-pill">Docker</span>
+          <span class="stack-pill">GCP</span>
+        </div>
+        <a href="breast-cancer-classifier.html" class="project-link">Case study →</a>
+      </div>
+
+      <div class="project-card reveal" style="border-top: 2px solid rgba(74,222,158,0.5);">
+        <div class="project-tag" style="color:#a78bfa;">Deep Learning · Keras · TensorFlow</div>
+        <h3>CIFAR-10 CNN</h3>
+        <p>A custom convolutional neural network built in Keras that classifies 32×32 images across 10 object categories — achieving 73.2% test accuracy trained from scratch on 50,000 images.</p>
+        <div class="project-stack">
+          <span class="stack-pill">Keras</span>
+          <span class="stack-pill">TensorFlow</span>
+          <span class="stack-pill">CNN</span>
+        </div>
+        <a href="cifar10-cnn.html" class="project-link">Case study →</a>
+      </div>
+
+      <div class="project-card reveal" style="border-top: 2px solid rgba(74,222,158,0.5);">
+        <div class="project-tag" style="color:#38bdf8;">CV · NLP · Healthcare AI</div>
+        <h3>Donut Med Decoder</h3>
+        <p>Fine-tuned the Donut transformer to read handwritten Bangladeshi prescriptions and extract structured medical data end-to-end — no OCR pipeline. Best CER: 0.134. AIG 200 Capstone.</p>
+        <div class="project-stack">
+          <span class="stack-pill">PyTorch</span>
+          <span class="stack-pill">Donut</span>
+          <span class="stack-pill">HuggingFace</span>
+        </div>
+        <a href="donut-med-decoder.html" class="project-link">Case study →</a>
+      </div>
+
+      <div class="project-card reveal" style="border-top: 2px solid rgba(74,222,158,0.5);">
+        <div class="project-tag" style="color:#f5c842;">Three.js · ES Modules · Game Dev</div>
+        <h3>Wanderland</h3>
+        <p>A modular 3D open-world browser game — ginkgo groves, retro-futuristic chrome spires, ACES filmic rendering, 16k instanced grass, and a full day/night cycle. 14 ES modules, zero dependencies.</p>
+        <div class="project-stack">
+          <span class="stack-pill">Three.js</span>
+          <span class="stack-pill">GLSL</span>
+          <span class="stack-pill">ES Modules</span>
+        </div>
+        <a href="wanderland.html" class="project-link">Case study →</a>
+      </div>
+
+      <div class="project-card reveal" style="border-top: 2px solid rgba(74,222,158,0.5);">
+        <div class="project-tag" style="color:#f59e0b;">Self-Hosted · Docker · Ubuntu</div>
+        <h3>homelab3000</h3>
+        <p>A personal Ubuntu server running a full Docker-based media and home automation stack — Jellyfin, Radarr, Sonarr, Home Assistant, Portainer — accessible anywhere over Tailscale.</p>
+        <div class="project-stack">
+          <span class="stack-pill">Docker</span>
+          <span class="stack-pill">Ubuntu</span>
+          <span class="stack-pill">Tailscale</span>
+          <span class="stack-pill">Home Assistant</span>
+        </div>
+        <a href="homelab.html" class="project-link">Case study →</a>
+      </div>
+
+      <!-- ── ANDROID ── -->
+
       <div class="project-card reveal">
         <div class="project-tag">Android · Kotlin</div>
         <h3>Kotlin Search Engine</h3>
@@ -417,22 +484,7 @@
           <span class="stack-pill">Kotlin</span>
           <span class="stack-pill">Android</span>
         </div>
-        <a href="https://github.com/nicholosnauth/KotlinSearchEngine" target="_blank" class="project-link">
-          View on GitHub →
-        </a>
-      </div>
-
-      <div class="project-card reveal">
-        <div class="project-tag">Android · Kotlin</div>
-        <h3>Navigation App</h3>
-        <p>A navigation test app exploring Android's Jetpack Navigation component with smooth transitions between screens.</p>
-        <div class="project-stack">
-          <span class="stack-pill">Kotlin</span>
-          <span class="stack-pill">Jetpack</span>
-        </div>
-        <a href="https://github.com/nicholosnauth/NavApp" target="_blank" class="project-link">
-          View on GitHub →
-        </a>
+        <a href="https://github.com/nicholosnauth/KotlinSearchEngine" target="_blank" class="project-link">View on GitHub →</a>
       </div>
 
       <div class="project-card reveal">
@@ -443,22 +495,7 @@
           <span class="stack-pill">Kotlin</span>
           <span class="stack-pill">SQLite</span>
         </div>
-        <a href="https://github.com/nicholosnauth/ToDoApp" target="_blank" class="project-link">
-          View on GitHub →
-        </a>
-      </div>
-
-      <div class="project-card reveal">
-        <div class="project-tag">Android · Kotlin</div>
-        <h3>Calculator</h3>
-        <p>A native Android calculator with clean Material Design UI and solid arithmetic logic under the hood.</p>
-        <div class="project-stack">
-          <span class="stack-pill">Kotlin</span>
-          <span class="stack-pill">Material Design</span>
-        </div>
-        <a href="https://github.com/nicholosnauth/Calculator_Kotlin" target="_blank" class="project-link">
-          View on GitHub →
-        </a>
+        <a href="https://github.com/nicholosnauth/ToDoApp" target="_blank" class="project-link">View on GitHub →</a>
       </div>
 
       <div class="project-card reveal">
@@ -467,13 +504,10 @@
         <p>A full-stack booking platform with a PHP backend, MySQL database, and dynamic front-end.</p>
         <div class="project-stack">
           <span class="stack-pill">HTML</span>
-          <span class="stack-pill">CSS</span>
           <span class="stack-pill">PHP</span>
           <span class="stack-pill">MySQL</span>
         </div>
-        <a href="https://github.com/nicholosnauth/cois3420_nicholosnauth" target="_blank" class="project-link">
-          View on GitHub →
-        </a>
+        <a href="https://github.com/nicholosnauth/cois3420_nicholosnauth" target="_blank" class="project-link">View on GitHub →</a>
       </div>
 
       <div class="project-card reveal">
@@ -485,9 +519,7 @@
           <span class="stack-pill">PHP</span>
           <span class="stack-pill">SQL</span>
         </div>
-        <a href="https://github.com/nicholosnauth/COIS2240_Final" target="_blank" class="project-link">
-          View on GitHub →
-        </a>
+        <a href="https://github.com/nicholosnauth/COIS2240_Final" target="_blank" class="project-link">View on GitHub →</a>
       </div>
 
     </div>
@@ -541,11 +573,22 @@
         </ul>
       </div>
       <div class="skill-group reveal">
+        <div class="skill-group-title">AI / ML</div>
+        <ul>
+          <li>PyTorch · Keras · TF</li>
+          <li>scikit-learn</li>
+          <li>HuggingFace</li>
+          <li>FastAPI · Docker</li>
+          <li>Google Cloud Run</li>
+        </ul>
+      </div>
+      <div class="skill-group reveal">
         <div class="skill-group-title">Tools</div>
         <ul>
           <li>Android Studio</li>
           <li>Git · GitHub</li>
-          <li>VS Code</li>
+          <li>VS Code · Docker</li>
+          <li>Ubuntu · Linux</li>
         </ul>
       </div>
     </div>
