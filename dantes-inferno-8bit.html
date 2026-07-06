@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INFERNO: 7 Gates of Hell</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#0a0208;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-height:100vh; font-family:monospace; color:#e8d5a3;
+  }
+  #hud {
+    display:flex; justify-content:space-between; width:768px; max-width:96vw;
+    padding:8px 4px; font-size:13px; letter-spacing:2px; color:#c9412b;
+    text-transform:uppercase;
+  }
+  canvas {
+    image-rendering:pixelated;
+    border:4px solid #3a1a1a;
+    box-shadow:0 0 60px #6b0f0f66, inset 0 0 40px #000;
+    background:#000;
+  }
+  #controls { margin-top:10px; font-size:11px; color:#6b5a44; letter-spacing:1px; }
+</style>
+</head>
+<body>
+<div id="hud"><span id="gateLabel">INFERNO</span><span id="soulLabel">SOULS 0</span><span id="hpLabel">♥♥♥♥♥</span></div>
+<canvas id="c" width="384" height="216"></canvas>
+<div id="controls">← → MOVE · Z/↑ JUMP · X ATTACK · ENTER START</div>
+<script>
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+function fit(){ const s = Math.max(1, Math.min(3, Math.floor(Math.min(innerWidth*0.96, 1152)/384))); cv.style.width = 384*s+'px'; }
+fit(); addEventListener('resize', fit);
+
+// ============================================================
+// GATE DEFINITIONS — each circle is a distinct world
+// ============================================================
+const GATES = [
+ {name:'I · LIMBO', quote:'THE VIRTUOUS UNBAPTIZED WANDER, SIGHING WITHOUT TORMENT',
+  sky:'#141728', sky2:'#1e2340', ground:'#2e3350', ground2:'#232842', accent:'#8a93c4',
+  fog:'#3a4066', enemyHue:'#7f88b8', hazard:null, len:2600,
+  props:['castle','pillar','statue','willow'], ambient:'motes'},
+ {name:'II · LUST', quote:'THE CARNAL SINNERS ARE TOSSED FOREVER BY THE BLACK WIND',
+  sky:'#1c0c22', sky2:'#2e1338', ground:'#3d1a45', ground2:'#301238', accent:'#c458a0',
+  fog:'#5a2560', enemyHue:'#d16aa8', hazard:'wind', len:2800,
+  props:['spire','brokenarch'], ambient:'whirl'},
+ {name:'III · GLUTTONY', quote:'COLD ETERNAL RAIN. CERBERUS HOWLS OVER THE WALLOWING SOULS',
+  sky:'#0e1812', sky2:'#152418', ground:'#25382c', ground2:'#1c2c22', accent:'#6fae72',
+  fog:'#2e4a38', enemyHue:'#7fb884', hazard:'rain', len:2800,
+  props:['deadtree','mound','ribcage'], ambient:'rain'},
+ {name:'IV · GREED', quote:'HOARDERS AND WASTERS ROLL GREAT WEIGHTS AGAINST EACH OTHER',
+  sky:'#211c0c', sky2:'#2e2810', ground:'#453c18', ground2:'#362e12', accent:'#d4af37',
+  fog:'#5c5020', enemyHue:'#e0c050', hazard:'boulder', len:3000,
+  props:['goldpile','vault','scales'], ambient:'dust'},
+ {name:'V · WRATH', quote:'THE WRATHFUL TEAR EACH OTHER IN THE MARSH OF THE STYX',
+  sky:'#160c08', sky2:'#221208', ground:'#3a1f12', ground2:'#2c170d', accent:'#d4552b',
+  fog:'#4a2818', enemyHue:'#e06840', hazard:'styx', len:3000,
+  props:['tower','reeds','wreck'], ambient:'mist'},
+ {name:'VI · HERESY', quote:'THE CITY OF DIS. HERETICS BURN IN OPEN FLAMING TOMBS',
+  sky:'#1a0606', sky2:'#2a0a0a', ground:'#401515', ground2:'#320f0f', accent:'#ff5a3c',
+  fog:'#5a1a1a', enemyHue:'#ff7050', hazard:'flame', len:3200,
+  props:['tomb','diswall','ironspire'], ambient:'embers'},
+ {name:'VII · VIOLENCE', quote:'PHLEGETHON: A RIVER OF BOILING BLOOD FOR THE VIOLENT',
+  sky:'#140202', sky2:'#240404', ground:'#380a0a', ground2:'#2a0606', accent:'#ff2020',
+  fog:'#500c0c', enemyHue:'#ff4040', hazard:'blood', len:3400,
+  props:['thorntree','gallows','centaurstatue'], ambient:'embers'},
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let state = 'title', gate = 0, souls = 0, hp = 5, invuln = 0, t = 0, introT = 0, msg = '', msgT = 0;
+const G = 0.35, W = 384, H = 216, FLOOR = 176;
+const player = { x:30, y:FLOOR, vx:0, vy:0, face:1, onGround:true, attack:0, cx:0, cy:0 };
+let enemies=[], pickups=[], particles=[], pits=[], plats=[], props=[], boulders=[], checkpoints=[], lastCP=30;
+let levelLen=2600, camX=0, gateX=0;
+
+const keys = {};
+addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (e.key==='Enter' && (state==='title'||state==='dead'||state==='win')) startGame();
+  if ([' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+});
+addEventListener('keyup', e => keys[e.key] = false);
+
+function rng(seed){ let s = seed; return () => (s = (s*16807)%2147483647)/2147483647; }
+
+function startGame(){ gate=0; souls=0; hp=5; loadGate(); }
+
+// ============================================================
+// LEVEL GENERATION
+// ============================================================
+function loadGate(){
+  state='gateintro'; introT=0;
+  const g = GATES[gate];
+  levelLen = g.len; gateX = levelLen-70;
+  player.x=30; player.y=FLOOR; player.vx=0; player.vy=0; camX=0; invuln=90; lastCP=30;
+  enemies=[]; pickups=[]; pits=[]; plats=[]; props=[]; boulders=[]; checkpoints=[]; particles=[];
+  const R = rng(1234 + gate*777);
+
+  // --- pits (hazard trenches) ---
+  const nPits = 2 + gate;
+  for (let i=0;i<nPits;i++){
+    const x = 380 + i*(levelLen-700)/nPits + R()*80;
+    pits.push({ x, w: 40 + R()*30 + gate*4 });
+  }
+
+  // --- floating platforms (some span pits) ---
+  const nPlats = 8 + gate*2;
+  for (let i=0;i<nPlats;i++){
+    const x = 250 + i*(levelLen-450)/nPlats + R()*50;
+    plats.push({ x, y: FLOOR - 34 - Math.floor(R()*3)*22, w: 40 + R()*30,
+                 move: gate>=3 && R()<0.3, ph: R()*6, baseX:x, range: 30+R()*20 });
+  }
+  // guarantee platforms over each pit
+  for (const p of pits){
+    plats.push({ x: p.x + p.w/2 - 24, y: FLOOR - 40, w: 48, move:false, ph:0, baseX:p.x, range:0 });
+  }
+
+  // --- checkpoints (waystone shrines) ---
+  const nCP = 2 + Math.floor(gate/2);
+  for (let i=1;i<=nCP;i++) checkpoints.push({ x: i*levelLen/(nCP+1), lit:false });
+
+  // --- enemies ---
+  const nE = 6 + gate*3;
+  for (let i=0;i<nE;i++){
+    const x = 260 + i*(levelLen-450)/nE + R()*60;
+    const r = R();
+    let type = 'walker';
+    if (r < 0.25) type = 'flyer';
+    else if (r < 0.4 && gate>=2) type = 'lurker';   // rises from ground
+    else if (r < 0.5 && gate>=4) type = 'brute';    // 2hp big
+    enemies.push({ x, y:FLOOR, vx:0, hp: type==='brute'?3:(gate>=4?2:1), maxhp: type==='brute'?3:(gate>=4?2:1),
+                   dir:-1, type, baseY:FLOOR-45-R()*35, ph:R()*6, hidden:type==='lurker', flash:0 });
+  }
+
+  // --- boulders (Greed) ---
+  if (g.hazard==='boulder'){
+    for (let i=0;i<4;i++) boulders.push({ x: 400+i*550+R()*100, y: FLOOR-8, vx: R()<0.5?-1.2:1.2, r:8 });
+  }
+
+  // --- souls (some on platforms) ---
+  for (let i=0;i<14;i++){
+    const onPlat = plats[Math.floor(R()*plats.length)];
+    if (R()<0.4 && onPlat) pickups.push({ x:onPlat.x+onPlat.w/2, y:onPlat.y-12, taken:false, heart:false });
+    else pickups.push({ x:220+R()*(levelLen-380), y:FLOOR-10-R()*40, taken:false, heart:false });
+  }
+  // one heart per level, tucked away
+  pickups.push({ x: levelLen*0.55 + R()*200, y: FLOOR-90, taken:false, heart:true });
+
+  // --- decorative props ---
+  const nProps = 18 + gate*2;
+  for (let i=0;i<nProps;i++){
+    props.push({ x: 60 + R()*(levelLen-160), kind: g.props[Math.floor(R()*g.props.length)],
+                 s: 0.7 + R()*0.6, layer: R()<0.35 ? 0.6 : 1, ph:R()*6 });
+  }
+  // universal scatter: bones, torches, skulls
+  for (let i=0;i<24;i++){
+    props.push({ x: 40 + R()*(levelLen-80), kind: ['bones','skull','torch','shard'][Math.floor(R()*4)],
+                 s:1, layer:1, ph:R()*6 });
+  }
+  props.sort((a,b)=>a.layer-b.layer);
+}
+
+function showMsg(s){ msg = s; msgT = 140; }
+
+// ============================================================
+// UPDATE
+// ============================================================
+function overPit(x){
+  for (const p of pits) if (x > p.x && x < p.x+p.w) return p;
+  return null;
+}
+
+function update(){
+  t++;
+  if (msgT>0) msgT--;
+  if (state==='gateintro'){ introT++; if (introT>140 || (introT>20 && keys['Enter'])) state='play'; return; }
+  if (state!=='play') return;
+  const g = GATES[gate];
+
+  // ---- input ----
+  const spd = 1.6;
+  if (keys['ArrowLeft']){ player.vx=-spd; player.face=-1; }
+  else if (keys['ArrowRight']){ player.vx=spd; player.face=1; }
+  else player.vx*=0.7;
+  if ((keys['z']||keys['Z']||keys['ArrowUp']) && player.onGround){ player.vy=-6.3; player.onGround=false; }
+  if ((keys['x']||keys['X']) && player.attack<=0) player.attack=14;
+  if (player.attack>0) player.attack--;
+  if (g.hazard==='wind') player.vx += Math.sin(t*0.02)*0.28; // Lust gale
+
+  // ---- physics ----
+  player.vy += G;
+  const prevY = player.y;
+  player.x += player.vx; player.y += player.vy;
+  player.x = Math.max(5, Math.min(player.x, levelLen-10));
+  player.onGround = false;
+
+  // moving platforms
+  for (const p of plats){
+    if (p.move) p.x = p.baseX + Math.sin(t*0.015 + p.ph)*p.range;
+    if (player.vy >= 0 && prevY <= p.y+2 && player.y >= p.y &&
+        player.x > p.x-4 && player.x < p.x+p.w+4){
+      player.y = p.y; player.vy = 0; player.onGround = true;
+      if (p.move) player.x += Math.cos(t*0.015+p.ph)*0.015*p.range; // carry
+    }
+  }
+  // ground (unless over pit)
+  const pit = overPit(player.x);
+  if (!pit && player.y >= FLOOR){ player.y=FLOOR; player.vy=0; player.onGround=true; }
+  // fell into pit
+  if (pit && player.y > FLOOR+14){
+    hurt(2);
+    player.x = pit.x - 18; player.y = FLOOR; player.vy = 0;
+  }
+
+  camX = Math.max(0, Math.min(player.x - W/2, levelLen - W));
+  if (invuln>0) invuln--;
+
+  // ---- checkpoints ----
+  for (const c of checkpoints){
+    if (!c.lit && Math.abs(player.x-c.x)<12){
+      c.lit = true; lastCP = c.x;
+      showMsg('WAYSTONE LIT');
+      for(let i=0;i<12;i++) particles.push({x:c.x,y:FLOOR-20,vx:(Math.random()-0.5)*2,vy:-Math.random()*3,life:30,c:g.accent});
+    }
+  }
+
+  // ---- boulders (Greed) ----
+  for (const b of boulders){
+    b.x += b.vx;
+    if (b.x < 100 || b.x > levelLen-100) b.vx *= -1;
+    if (overPit(b.x)) b.vx *= -1;
+    if (invuln<=0 && Math.abs(b.x-player.x)<11 && Math.abs(b.y-(player.y-6))<12) { hurt(1); player.vy=-4; player.vx=b.vx*3; }
+  }
+
+  // ---- enemies ----
+  for (const e of enemies){
+    if (e.hp<=0) continue;
+    if (e.flash>0) e.flash--;
+    const d = player.x - e.x;
+    if (e.type==='walker' || e.type==='brute'){
+      const sp = e.type==='brute'?0.45:0.65;
+      if (Math.abs(d)<150) e.vx = Math.sign(d)*sp; else e.vx = Math.sin(t*0.01+e.ph)*0.4;
+      // don't walk into pits
+      const ahead = e.x + Math.sign(e.vx)*8;
+      if (!overPit(ahead)) e.x += e.vx;
+      e.y = FLOOR;
+    } else if (e.type==='flyer'){
+      e.ph += 0.03;
+      e.y = e.baseY + Math.sin(e.ph)*22;
+      if (Math.abs(d)<220) e.x += Math.sign(d)*0.55;
+    } else if (e.type==='lurker'){
+      if (e.hidden && Math.abs(d)<70){ e.hidden=false; e.riseT=20;
+        for(let i=0;i<8;i++) particles.push({x:e.x,y:FLOOR,vx:(Math.random()-0.5)*2,vy:-Math.random()*2,life:18,c:g.ground});
+      }
+      if (!e.hidden){
+        if (e.riseT>0){ e.riseT--; e.y = FLOOR; }
+        else { if (Math.abs(d)<160) e.x += Math.sign(d)*0.8; e.y = FLOOR; }
+      }
+    }
+    // contact damage
+    const eh = e.type==='brute'?18:14;
+    if (!e.hidden && invuln<=0 && Math.abs(e.x-player.x)<(e.type==='brute'?12:9) && Math.abs(e.y-eh/2-(player.y-8))<eh) hurt(1);
+    // sword
+    if (player.attack>6){
+      const ax = player.x + player.face*14;
+      if (!e.hidden && Math.abs(e.x-ax)<15 && Math.abs(e.y-10-(player.y-8))<18){
+        if (e.flash<=0){
+          e.hp--; e.flash=10; e.x += player.face*6;
+          for(let i=0;i<8;i++) particles.push({x:e.x,y:e.y-10,vx:(Math.random()-0.5)*3,vy:-Math.random()*2,life:20,c:g.enemyHue});
+          if (e.hp<=0){ souls+=3; showMsg('+3 SOULS'); }
+        }
+      }
+    }
+  }
+
+  // ---- pickups ----
+  for (const p of pickups){
+    if (!p.taken && Math.abs(p.x-player.x)<10 && Math.abs(p.y-(player.y-8))<14){
+      p.taken=true;
+      if (p.heart){ hp=Math.min(5,hp+1); showMsg('LIFE RESTORED'); }
+      else souls++;
+      for(let i=0;i<6;i++) particles.push({x:p.x,y:p.y,vx:(Math.random()-0.5)*2,vy:-Math.random()*2,life:16,c:p.heart?'#ff5060':'#ffe9a0'});
+    }
+  }
+
+  for (const p of particles){ p.x+=p.vx; p.y+=p.vy; p.vy+=0.1; p.life--; }
+  particles = particles.filter(p=>p.life>0);
+
+  // ---- gate ----
+  if (player.x > gateX){
+    gate++;
+    if (gate>=GATES.length) state='win';
+    else loadGate();
+  }
+}
+
+function hurt(n){
+  if (invuln>0) return;
+  hp-=n; invuln=75;
+  for(let i=0;i<12;i++) particles.push({x:player.x,y:player.y-8,vx:(Math.random()-0.5)*3,vy:-Math.random()*3,life:24,c:'#ff3030'});
+  if (hp<=0) state='dead';
+  else if (n>=2){ player.x = lastCP; player.y = FLOOR; player.vy = 0; } // pit death → waystone
+}
+
+// ============================================================
+// DRAW HELPERS
+// ============================================================
+function px(x,y,w,h,c){ ctx.fillStyle=c; ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h)); }
+function text(s,x,y,size,c,align='center'){ ctx.fillStyle=c; ctx.font=size+'px monospace'; ctx.textAlign=align; ctx.fillText(s,x,y); }
+
+// ---- prop sprites (drawn at world x, ground level) ----
+function drawProp(p, g){
+  const layerCam = camX * p.layer;
+  const x = Math.round(p.x - layerCam);
+  if (x<-100||x>W+100) return;
+  const dim = p.layer<1;
+  ctx.globalAlpha = dim?0.45:1;
+  const y = FLOOR + (dim?2:2);
+  const s = p.s;
+  switch(p.kind){
+    case 'castle': // Limbo's noble castle, far off
+      px(x, y-70*s, 50*s, 70*s, g.ground2);
+      px(x+8*s, y-84*s, 10*s, 14*s, g.ground2); px(x+32*s, y-84*s, 10*s, 14*s, g.ground2);
+      px(x+10*s, y-78*s, 3, 3, '#ffe9a0'); px(x+34*s, y-78*s, 3, 3, '#ffe9a0'); // lit windows
+      px(x+20*s, y-40*s, 8*s, 40*s, '#000');
+      break;
+    case 'pillar':
+      px(x, y-50*s, 8, 50*s, g.ground2); px(x-3, y-54*s, 14, 5, g.ground2); px(x-2, y-2, 12, 3, g.ground2);
+      break;
+    case 'statue': // weeping figure
+      px(x, y-26, 10, 26, g.fog); px(x+2, y-32, 6, 7, g.fog); px(x-4, y-20, 4, 10, g.fog);
+      break;
+    case 'willow':
+      px(x+4, y-40*s, 4, 40*s, '#1c2035');
+      for (let i=0;i<5;i++) px(x-8+i*6, y-44*s + Math.sin(t*0.02+i+p.ph)*2, 2, 22*s, '#2a3050');
+      break;
+    case 'spire':
+      px(x, y-64*s, 10, 64*s, g.ground2); px(x+2, y-72*s, 6, 9, g.ground2);
+      px(x+3, y-50*s, 4, 4, '#c458a077');
+      break;
+    case 'brokenarch':
+      px(x, y-44, 8, 44, g.ground2); px(x+34, y-38, 8, 38, g.ground2);
+      px(x+4, y-48, 16, 6, g.ground2);
+      break;
+    case 'deadtree':
+      px(x+5, y-38*s, 4, 38*s, '#1a241c');
+      px(x-2, y-36*s, 10, 3, '#1a241c'); px(x+8, y-46*s, 3, 12, '#1a241c'); px(x, y-46*s, 3, 10,'#1a241c');
+      break;
+    case 'mound': // wallowing soul mound
+      px(x, y-8, 22, 8, g.ground2); px(x+6, y-11, 10, 4, g.ground2);
+      if (Math.floor(t/40+p.ph)%3===0) px(x+9, y-14, 4, 3, g.fog); // it shifts...
+      break;
+    case 'ribcage':
+      for (let i=0;i<4;i++) px(x+i*5, y-14+i, 2, 14-i*2, '#c9c0a0');
+      px(x-2, y-16, 22, 3, '#c9c0a0');
+      break;
+    case 'goldpile':
+      px(x, y-6, 20, 6, '#d4af37'); px(x+4, y-10, 12, 4, '#e8c84a'); px(x+7, y-13, 6, 3, '#f4dc6a');
+      if ((t+p.ph*60)%90<6) px(x+9, y-16, 2, 2, '#fff'); // glint
+      break;
+    case 'vault':
+      px(x, y-34, 30, 34, g.ground2); px(x+10, y-24, 10, 24, '#000');
+      px(x+13, y-20, 4, 4, '#d4af37');
+      break;
+    case 'scales':
+      px(x+8, y-30, 3, 30, '#8a7a30'); px(x, y-30, 20, 2, '#8a7a30');
+      px(x-2, y-28+Math.sin(t*0.03+p.ph)*3, 6, 4, '#8a7a30');
+      px(x+15, y-28-Math.sin(t*0.03+p.ph)*3, 6, 4, '#8a7a30');
+      break;
+    case 'tower': // Styx watchtower with signal fire
+      px(x, y-60*s, 14, 60*s, g.ground2);
+      px(x+3, y-64*s+Math.sin(t*0.2)*1, 8, 6, '#ff6020');
+      break;
+    case 'reeds':
+      for (let i=0;i<5;i++) px(x+i*3, y-10-((i*7)%6) + Math.sin(t*0.03+i+p.ph)*1.5, 1, 10+((i*7)%6), '#2c3a20');
+      break;
+    case 'wreck': // sunken ferry
+      px(x, y-8, 30, 8, '#241208'); px(x+26, y-18, 4, 12, '#241208');
+      break;
+    case 'tomb': // flaming sarcophagus
+      px(x, y-16, 24, 16, '#2a1010'); px(x-2, y-18, 28, 3, '#3a1515');
+      const fh = 6+Math.sin(t*0.15+p.ph)*3;
+      px(x+4, y-18-fh, 5, fh, '#ff6020'); px(x+11, y-16-fh*1.3, 5, fh*1.3, '#ffa030'); px(x+17, y-18-fh*0.8, 4, fh*0.8, '#ff6020');
+      break;
+    case 'diswall': // iron walls of the city of Dis
+      px(x, y-56*s, 40*s, 56*s, '#200808');
+      for(let i=0;i<4;i++) px(x+4+i*9*s, y-50*s, 3, 6, '#ff5a3c55');
+      px(x+8*s, y-62*s, 6, 8, '#200808'); px(x+26*s, y-62*s, 6, 8, '#200808');
+      break;
+    case 'ironspire':
+      px(x, y-48*s, 6, 48*s, '#1a0808'); px(x-3, y-30*s, 12, 3, '#1a0808');
+      break;
+    case 'thorntree':
+      px(x+4, y-30, 3, 30, '#1c0808');
+      px(x-4, y-26, 10, 2, '#1c0808'); px(x+7, y-34, 8, 2, '#1c0808'); px(x, y-38, 2, 8, '#1c0808');
+      px(x-4, y-28, 2, 2, '#500c0c'); px(x+13, y-36, 2, 2, '#500c0c'); // thorns
+      break;
+    case 'gallows':
+      px(x, y-40, 3, 40, '#1c0808'); px(x, y-40, 18, 3, '#1c0808');
+      px(x+14, y-37, 1, 8+Math.sin(t*0.02+p.ph)*1, '#3a2a1a');
+      break;
+    case 'centaurstatue':
+      px(x, y-14, 20, 8, '#2a0808'); px(x+14, y-26, 8, 14, '#2a0808'); px(x+16, y-30, 5, 5, '#2a0808');
+      px(x+22, y-28, 8, 2, '#2a0808'); // bow arm
+      break;
+    case 'bones':
+      px(x, y-2, 8, 2, '#c9c0a0'); px(x+10, y-3, 5, 2, '#b0a888');
+      break;
+    case 'skull':
+      px(x, y-5, 6, 5, '#c9c0a0'); px(x+1, y-4, 1, 2, '#000'); px(x+4, y-4, 1, 2, '#000');
+      break;
+    case 'torch':
+      px(x, y-22, 2, 22, '#3a2a1a');
+      const th = 4+Math.sin(t*0.2+p.ph)*2;
+      px(x-1, y-24-th, 4, th, '#ffa030'); px(x, y-23-th*0.5, 2, th*0.5, '#ffe9a0');
+      break;
+    case 'shard':
+      px(x, y-8, 3, 8, g.fog); px(x+5, y-5, 2, 5, g.fog);
+      break;
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawPlayer(){
+  if (invuln>0 && Math.floor(t/4)%2) return;
+  const x = Math.round(player.x-camX), y = Math.round(player.y);
+  const walking = Math.abs(player.vx)>0.3 && player.onGround;
+  const step = walking ? Math.floor(t/7)%2 : 0;
+  px(x-4, y-16, 8, 4, '#e8d5a3');                    // face
+  px(x-5, y-17, 10, 2, '#3f6b3a');                   // laurel
+  px(x-5, y-12, 10, 10, '#8c1f1f');                  // robe
+  px(x-5+player.face, y-12, 2, 8, '#6b1515');        // robe shade
+  px(x-5, y-2+(step?0:-1), 4, 2, '#4a2c18');
+  px(x+1, y-2+(step?-1:0), 4, 2, '#4a2c18');
+  px(x+(player.face>0?3:-6), y-15, 1, 1, '#000');
+  if (!player.onGround) px(x-6, y-10, 12, 2, '#8c1f1f'); // robe flare
+  if (player.attack>6){
+    const sx = x+player.face*7;
+    px(sx, y-12, player.face*11, 2, '#dfe6ef');
+    px(sx+player.face*10, y-14, 2, 6, '#dfe6ef');
+    px(sx+player.face*4, y-13, player.face*3, 1, '#ffffff');
+  }
+}
+
+function drawEnemy(e, g){
+  if (e.hp<=0 || e.hidden) return;
+  const x = Math.round(e.x-camX), y = Math.round(e.y);
+  if (x<-24||x>W+24) return;
+  const c = e.flash>0 ? '#ffffff' : g.enemyHue;
+  if (e.type==='walker'){
+    px(x-6, y-12, 12, 10, c);
+    px(x-7, y-15, 3, 4, c); px(x+4, y-15, 3, 4, c);
+    px(x-4, y-9, 2, 2, '#000'); px(x+2, y-9, 2, 2, '#000');
+    const leg = Math.floor(t/8)%2;
+    px(x-5, y-2, 3, 2, '#000'); px(x+2+leg, y-2, 3, 2, '#000');
+  } else if (e.type==='brute'){
+    px(x-9, y-20, 18, 18, c);
+    px(x-11, y-24, 4, 6, c); px(x+7, y-24, 4, 6, c);
+    px(x-5, y-15, 3, 3, '#000'); px(x+2, y-15, 3, 3, '#000');
+    px(x-3, y-9, 6, 2, '#600');
+    const leg = Math.floor(t/10)%2;
+    px(x-8, y-2, 5, 2, '#000'); px(x+3+leg, y-2, 5, 2, '#000');
+    // hp pips
+    for (let i=0;i<e.hp;i++) px(x-6+i*5, y-28, 3, 2, '#ff4040');
+  } else if (e.type==='flyer'){
+    const flap = Math.sin(e.ph*4)*3;
+    px(x-3, y-8, 6, 8, c);
+    px(x-10, y-8+flap, 7, 3, c); px(x+3, y-8+flap, 7, 3, c);
+    px(x-2, y-6, 1, 2, '#000'); px(x+1, y-6, 1, 2, '#000');
+    px(x-1, y, 2, 3, c);
+  } else if (e.type==='lurker'){
+    const rise = e.riseT>0 ? e.riseT/20 : 0;
+    const yy = y + rise*14;
+    px(x-5, yy-14, 10, 14, c);
+    px(x-3, yy-11, 2, 3, '#000'); px(x+1, yy-11, 2, 3, '#000');
+    px(x-6, yy-16, 3, 3, c); px(x+3, yy-16, 3, 3, c);
+    px(x-7, yy-8, 2, 6, c); px(x+5, yy-8, 2, 6, c); // claws
+  }
+}
+
+// ============================================================
+// BACKGROUND
+// ============================================================
+function drawBg(g){
+  // sky gradient (two bands)
+  px(0,0,W,H*0.55,g.sky); px(0,H*0.55,W,H*0.45,g.sky2);
+
+  // far skyline (parallax 0.25)
+  ctx.fillStyle = g.ground2; ctx.globalAlpha = 0.5;
+  for (let i=0;i<24;i++){
+    const bx = ((i*52 - camX*0.25) % (W+60)) - 30;
+    const bx2 = bx<-30?bx+W+60:bx;
+    const hgt = 26 + ((i*37+gate*13)%44);
+    ctx.fillRect(bx2, FLOOR-hgt-20, 26, hgt+20);
+    if (gate===5 && i%3===0){ ctx.globalAlpha=0.8; ctx.fillStyle='#ff5a3c44'; ctx.fillRect(bx2+8, FLOOR-hgt-14, 3, 4); ctx.fillStyle=g.ground2; ctx.globalAlpha=0.5; }
+  }
+  ctx.globalAlpha = 1;
+
+  // fog bands (parallax 0.4)
+  ctx.fillStyle = g.fog; ctx.globalAlpha = 0.22;
+  for (let i=0;i<4;i++){
+    const off = (camX*0.4 + i*130 + t*0.1)% (W+160);
+    ctx.fillRect(W-off, 70+i*24 + Math.sin(t*0.008+i)*4, 110, 7);
+  }
+  ctx.globalAlpha = 1;
+
+  // ambient effects
+  if (g.ambient==='motes'){
+    ctx.fillStyle='#8a93c455';
+    for (let i=0;i<24;i++){
+      const mx=(i*61+Math.sin(t*0.008+i)*30 - camX*0.3)%W, my=(i*83+t*0.15)%H;
+      px((mx+W)%W, H-my, 1, 1, '#8a93c455');
+    }
+  }
+  if (g.ambient==='whirl'){
+    for (let i=0;i<18;i++){
+      const wx=(i*71 + t*2.5 - camX*0.5)%(W+40)-20, wy = 40+((i*53)%110)+Math.sin(t*0.05+i)*14;
+      px((wx+W+40)%(W+40)-20, wy, 6, 1, '#c458a044');
+      px((wx+W+40)%(W+40)-24, wy+2, 4, 1, '#c458a022');
+    }
+  }
+  if (g.ambient==='rain'){
+    ctx.fillStyle = '#6fae7266';
+    for (let i=0;i<52;i++){
+      const rx=(i*53+t*2)%W, ry=(i*91+t*5)%H;
+      ctx.fillRect(rx, ry, 1, 6);
+    }
+  }
+  if (g.ambient==='dust'){
+    for (let i=0;i<14;i++){
+      const dx=(i*97+t*0.4 - camX*0.6)%W, dy=FLOOR-6-((i*31)%30);
+      px((dx+W)%W, dy, 2, 1, '#d4af3733');
+    }
+  }
+  if (g.ambient==='mist'){
+    ctx.fillStyle='#4a281855'; ctx.globalAlpha=0.4;
+    for (let i=0;i<6;i++){
+      const mx=(i*140 - camX*0.7 + t*0.3)%(W+180)-90;
+      ctx.fillRect((mx+W+180)%(W+180)-90, FLOOR-10+Math.sin(t*0.01+i)*2, 130, 10);
+    }
+    ctx.globalAlpha=1;
+  }
+  if (g.ambient==='embers'){
+    for (let i=0;i<26;i++){
+      const ex=(i*67+Math.sin(t*0.02+i)*24 - camX*0.5)%W, ey=H-((i*47+t*0.8)%H);
+      px((ex+W)%W, ey, 2, 2, i%3?'#ff804088':'#ffc060aa');
+    }
+  }
+}
+
+function drawGround(g){
+  // draw ground in segments, skipping pits
+  let segs = [{a:0,b:levelLen}];
+  for (const p of pits){
+    const out=[];
+    for (const s of segs){
+      if (p.x>s.a) out.push({a:s.a,b:Math.min(s.b,p.x)});
+      if (p.x+p.w<s.b) out.push({a:Math.max(s.a,p.x+p.w),b:s.b});
+    }
+    segs=out;
+  }
+  for (const s of segs){
+    const x1=Math.max(0,s.a-camX), x2=Math.min(W,s.b-camX);
+    if (x2<0||x1>W) continue;
+    px(x1, FLOOR+2, x2-x1, H-FLOOR, g.ground);
+    px(x1, FLOOR, x2-x1, 3, g.accent);
+    // cracked texture
+    ctx.fillStyle='#00000044';
+    for (let gx=Math.floor(s.a/24)*24; gx<s.b; gx+=24){
+      const sx=gx-camX;
+      if (sx>-10&&sx<W){ ctx.fillRect(sx+((gx/24)%3)*5, FLOOR+7+((gx/24)%4)*7, 9, 2); }
+    }
+  }
+  // pit interiors
+  for (const p of pits){
+    const x = Math.round(p.x-camX);
+    if (x+p.w<0||x>W) continue;
+    const c1 = g.hazard==='blood'?'#a01010': g.hazard==='styx'?'#1a3020': g.hazard==='flame'?'#ff6020': '#000';
+    px(x, FLOOR+10, p.w, H-FLOOR-10, '#000');
+    px(x, FLOOR+18, p.w, 8, c1);
+    // bubbles / flames rising
+    for (let i=0;i<4;i++){
+      const bx = x + (i*p.w/4 + t*0.6)%p.w;
+      const by = FLOOR+16 - (Math.sin(t*0.1+i*2)>0.4?4:0);
+      px(bx, by, 3, 4, c1);
+    }
+    // grasping hands in Styx / blood
+    if ((g.hazard==='styx'||g.hazard==='blood') && Math.floor(t/50+p.x)%3===0){
+      px(x+p.w/2, FLOOR+8, 2, 8, '#301818'); px(x+p.w/2-2, FLOOR+8, 6, 2, '#301818');
+    }
+  }
+}
+
+function drawPlats(g){
+  for (const p of plats){
+    const x = Math.round(p.x-camX);
+    if (x+p.w<0||x>W) continue;
+    px(x, p.y, p.w, 5, g.ground);
+    px(x, p.y, p.w, 2, g.accent);
+    px(x+2, p.y+5, 3, 3, g.ground2); px(x+p.w-5, p.y+5, 3, 3, g.ground2);
+  }
+}
+
+function drawCheckpoints(g){
+  for (const c of checkpoints){
+    const x = Math.round(c.x-camX);
+    if (x<-20||x>W+20) continue;
+    px(x-3, FLOOR-24, 6, 24, c.lit?g.accent:'#333');
+    px(x-5, FLOOR-27, 10, 4, c.lit?g.accent:'#444');
+    if (c.lit){
+      const fh = 4+Math.sin(t*0.15+c.x)*2;
+      px(x-2, FLOOR-28-fh, 4, fh, '#ffe9a0');
+      ctx.globalAlpha = 0.15+Math.sin(t*0.05)*0.05;
+      px(x-10, FLOOR-36, 20, 36, g.accent);
+      ctx.globalAlpha = 1;
+    }
+  }
+}
+
+function drawGateDoor(g){
+  const x = Math.round(gateX-camX);
+  if (x<-80||x>W+80) return;
+  const next = GATES[gate+1];
+  px(x-10, FLOOR-66, 8, 68, '#1e1e1e'); px(x+36, FLOOR-66, 8, 68, '#1e1e1e');
+  px(x-12, FLOOR-70, 58, 6, '#2a2a2a');
+  px(x-4, FLOOR-58, 42, 60, '#141414');
+  px(x, FLOOR-52, 34, 54, '#000');
+  const pulse = Math.sin(t*0.08)*0.25+0.55;
+  ctx.globalAlpha = pulse;
+  px(x+4, FLOOR-46, 26, 46, next?next.accent:'#ffe9a0');
+  ctx.globalAlpha = pulse*0.4;
+  px(x-2, FLOOR-52, 38, 54, next?next.accent:'#ffe9a0');
+  ctx.globalAlpha = 1;
+  // inscription
+  text('▼', x+17, FLOOR-74, 8, g.accent);
+}
+
+function drawBoulders(){
+  for (const b of boulders){
+    const x = Math.round(b.x-camX);
+    if (x<-20||x>W+20) continue;
+    const roll = Math.floor(b.x/6)%4;
+    px(x-8, b.y-8, 16, 16, '#5a4c20');
+    px(x-6, b.y-6, 12, 12, '#6e5c28');
+    px(x-6+roll*3, b.y-6+((roll*2)%8), 3, 3, '#453c18');
+  }
+}
+
+function drawSoulsPickups(){
+  for (const p of pickups){
+    if (p.taken) continue;
+    const x = Math.round(p.x-camX), y = Math.round(p.y+Math.sin(t*0.08+p.x)*3);
+    if (x<-10||x>W+10) continue;
+    if (p.heart){
+      px(x-3, y-3, 3, 3, '#ff5060'); px(x+1, y-3, 3, 3, '#ff5060');
+      px(x-3, y-1, 7, 3, '#ff5060'); px(x-1, y+2, 3, 2, '#ff5060');
+    } else {
+      px(x-2, y-4, 4, 7, '#ffe9a0'); px(x-3, y-2, 6, 3, '#ffe9a0');
+      ctx.globalAlpha=0.3; px(x-4, y-6, 8, 11, '#ffe9a0'); ctx.globalAlpha=1;
+    }
+  }
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function render(){
+  const g = GATES[Math.min(gate,GATES.length-1)];
+  ctx.textBaseline='alphabetic';
+
+  if (state==='title'){
+    px(0,0,W,H,'#0a0208');
+    for (let i=0;i<W;i+=8){
+      const fh = 22+Math.sin(t*0.1+i)*8+Math.sin(t*0.07+i*3)*6;
+      px(i,H-fh,8,fh, i%16?'#8c1f1f':'#c9412b');
+      px(i+2,H-fh+6,4,fh-6,'#5a1010');
+    }
+    // gate silhouette
+    px(W/2-40, 30, 12, 120, '#1a1a1a'); px(W/2+28, 30, 12, 120, '#1a1a1a'); px(W/2-46, 24, 92, 8, '#1a1a1a');
+    text('I N F E R N O', W/2, 74, 26, '#c9412b');
+    text('THE 7 GATES OF HELL', W/2, 94, 10, '#e8d5a3');
+    text('"ABANDON ALL HOPE, YE WHO ENTER HERE"', W/2, 118, 8, '#6b5a44');
+    if (Math.floor(t/30)%2) text('PRESS ENTER', W/2, 150, 10, '#ffe9a0');
+  }
+  else if (state==='gateintro'){
+    px(0,0,W,H,g.sky);
+    px(0,H*0.6,W,H*0.4,g.sky2);
+    ctx.globalAlpha = Math.min(1, introT/30);
+    text('GATE ' + g.name, W/2, 84, 17, g.accent);
+    text(g.quote, W/2, 112, 7.5, '#e8d5a3');
+    if (introT>50) text('ENTER TO DESCEND', W/2, 150, 8, '#6b5a44');
+    ctx.globalAlpha = 1;
+  }
+  else if (state==='play'){
+    drawBg(g);
+    for (const p of props) if (p.layer<1) drawProp(p,g);
+    drawGround(g);
+    for (const p of props) if (p.layer>=1) drawProp(p,g);
+    drawCheckpoints(g);
+    drawPlats(g);
+    drawGateDoor(g);
+    drawBoulders();
+    drawSoulsPickups();
+    for (const e of enemies) drawEnemy(e,g);
+    drawPlayer();
+    for (const p of particles) px(p.x-camX, p.y, 2, 2, p.c);
+    // vignette
+    ctx.globalAlpha=0.35; px(0,0,W,6,'#000'); px(0,H-6,W,6,'#000'); ctx.globalAlpha=1;
+    // message
+    if (msgT>0){ ctx.globalAlpha=Math.min(1,msgT/20); text(msg, W/2, 30, 9, '#ffe9a0'); ctx.globalAlpha=1; }
+    // progress bar
+    px(10, H-12, 100, 3, '#222');
+    px(10, H-12, 100*(player.x/levelLen), 3, g.accent);
+  }
+  else if (state==='dead'){
+    px(0,0,W,H,'#0a0208');
+    text('YOU HAVE PERISHED', W/2, 86, 16, '#c9412b');
+    text('IN ' + GATES[gate].name, W/2, 108, 10, '#e8d5a3');
+    text('SOULS FREED: '+souls, W/2, 128, 9, '#ffe9a0');
+    if (Math.floor(t/30)%2) text('ENTER TO TRY AGAIN', W/2, 158, 9, '#6b5a44');
+  }
+  else if (state==='win'){
+    px(0,0,W,H,'#0a0a20');
+    for (let i=0;i<60;i++){
+      const sx=(i*73)%W, sy=(i*137)%140;
+      if ((i+Math.floor(t/20))%7) px(sx,sy,1,1,'#e8d5a3');
+    }
+    // mountain of purgatory on horizon
+    px(W/2-30, 150, 60, 40, '#1a1a30'); px(W/2-16, 138, 32, 14, '#1a1a30'); px(W/2-6, 130, 12, 10, '#242448');
+    text('YOU EMERGE FROM HELL', W/2, 70, 14, '#ffe9a0');
+    text('"AND THENCE WE CAME FORTH', W/2, 96, 8, '#8a93c4');
+    text('TO SEE AGAIN THE STARS"', W/2, 109, 8, '#8a93c4');
+    text('SOULS FREED: '+souls, W/2, 130, 10, '#c9412b');
+    if (Math.floor(t/30)%2) text('ENTER TO DESCEND AGAIN', W/2, 178, 8, '#6b5a44');
+  }
+
+  document.getElementById('gateLabel').textContent = (state==='play'||state==='gateintro') ? 'GATE '+g.name : 'INFERNO';
+  document.getElementById('soulLabel').textContent = 'SOULS '+souls;
+  document.getElementById('hpLabel').textContent = '♥'.repeat(Math.max(0,hp)) + '·'.repeat(Math.max(0,5-hp));
+}
+
+function loop(){ update(); render(); requestAnimationFrame(loop); }
+loop();
+</script>
+</body>
+</html>
