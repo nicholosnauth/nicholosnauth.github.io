@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nick Nauth — Homelab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d0f14;
+      --surface:  #13161d;
+      --border:   #1e2330;
+      --text:     #e8eaf0;
+      --muted:    #6b7280;
+      --accent:   #4ade9e;
+      --accent2:  #7c6af7;
+      --accent3:  #f59e0b;
+      --font-head: 'Space Grotesk', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: var(--font-head); font-size: 16px;
+      line-height: 1.65; -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    .container { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(13,15,20,0.88); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px; max-width: 1040px; margin: 0 auto;
+    }
+    .nav-logo { font-family: var(--font-mono); font-size: 14px; color: var(--accent); letter-spacing: 0.04em; }
+    .nav-links { display: flex; gap: 32px; }
+    .nav-links a { font-size: 13px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text); }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 60vh; display: flex; align-items: center;
+      padding: 140px 24px 80px; position: relative; overflow: hidden;
+    }
+    .hero-inner { max-width: 1040px; margin: 0 auto; width: 100%; }
+    .hero-eyebrow {
+      font-family: var(--font-mono); font-size: 12px;
+      color: var(--accent3); letter-spacing: 0.12em; text-transform: uppercase;
+      margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+    }
+    .hero-eyebrow::before { content: ''; display: block; width: 32px; height: 1px; background: var(--accent3); }
+    h1 { font-size: clamp(36px, 5vw, 58px); font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 20px; }
+    h1 span { color: var(--accent3); }
+    .hero-sub { font-size: 17px; color: var(--muted); line-height: 1.7; max-width: 560px; margin-bottom: 36px; }
+
+    /* stat bar */
+    .stat-row { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 8px; }
+    .stat {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 16px 22px; display: flex; flex-direction: column; gap: 4px;
+    }
+    .stat-val { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--accent); }
+    .stat-label { font-size: 12px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+
+    /* ── SECTION ── */
+    section { padding: 80px 0; }
+    .section-label {
+      font-family: var(--font-mono); font-size: 11px; color: var(--accent3);
+      letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 10px;
+    }
+    h2 { font-size: clamp(24px, 3.5vw, 36px); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 40px; line-height: 1.2; }
+    .divider { width: 100%; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+
+    /* ── ARCHITECTURE DIAGRAM ── */
+    .arch-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 32px; overflow-x: auto;
+    }
+    .arch {
+      font-family: var(--font-mono); font-size: 13px; line-height: 1.9;
+      color: var(--muted); white-space: pre; min-width: 540px;
+    }
+    .arch .hl  { color: var(--accent); }
+    .arch .hl2 { color: var(--accent2); }
+    .arch .hl3 { color: var(--accent3); }
+
+    /* ── CARDS GRID ── */
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 26px;
+      display: flex; flex-direction: column; gap: 10px;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: rgba(245,158,11,0.35); }
+    .card-icon { font-size: 26px; }
+    .card-tag {
+      font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--accent3); margin-bottom: 2px;
+    }
+    .card h3 { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+    .card p { font-size: 14px; color: var(--muted); line-height: 1.65; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .pill {
+      font-family: var(--font-mono); font-size: 10px; padding: 3px 9px;
+      border-radius: 3px; background: rgba(255,255,255,0.04);
+      color: var(--muted); border: 1px solid var(--border);
+    }
+    .pill-g { border-color: rgba(74,222,158,0.25); color: var(--accent); }
+    .pill-v { border-color: rgba(124,106,247,0.25); color: var(--accent2); }
+    .pill-a { border-color: rgba(245,158,11,0.25); color: var(--accent3); }
+
+    /* ── STACK TABLE ── */
+    .stack-table { width: 100%; border-collapse: collapse; }
+    .stack-table th {
+      font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--accent3); text-align: left;
+      padding: 10px 16px; border-bottom: 1px solid var(--border);
+    }
+    .stack-table td { padding: 13px 16px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: top; }
+    .stack-table tr:last-child td { border-bottom: none; }
+    .stack-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .stack-table td:first-child { font-family: var(--font-mono); color: var(--accent); font-size: 13px; white-space: nowrap; }
+    .stack-table td:nth-child(2) { color: var(--text); font-weight: 500; }
+    .stack-table td:last-child { color: var(--muted); font-size: 13px; }
+    .badge {
+      display: inline-block; font-family: var(--font-mono); font-size: 10px;
+      padding: 2px 8px; border-radius: 3px; margin-left: 6px;
+    }
+    .badge-g { background: rgba(74,222,158,0.12); color: var(--accent); }
+    .badge-v { background: rgba(124,106,247,0.12); color: var(--accent2); }
+    .badge-a { background: rgba(245,158,11,0.12); color: var(--accent3); }
+
+    /* ── TERMINAL BLOCK ── */
+    .terminal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; font-family: var(--font-mono); font-size: 13px;
+    }
+    .terminal-bar {
+      background: #1a1e28; padding: 12px 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; } .dot-y { background: #ffbd2e; } .dot-g { background: #28ca41; }
+    .terminal-body { padding: 20px 24px; line-height: 2.1; }
+    .t-prompt { color: var(--accent3); }
+    .t-cmd { color: var(--text); }
+    .t-out { color: var(--muted); }
+    .t-hl { color: var(--accent); }
+    .t-hl2 { color: var(--accent2); }
+
+    /* ── NETWORK MAP ── */
+    .network-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+    .net-node {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px 20px;
+    }
+    .net-node-title { font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    .net-node-ip { font-family: var(--font-mono); font-size: 12px; color: var(--accent3); margin-bottom: 10px; }
+    .net-node p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .status-dot {
+      display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent); margin-right: 6px;
+      box-shadow: 0 0 6px var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* ── REVEAL ── */
+    .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.55s ease, transform 0.55s ease; }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border); padding: 28px 24px;
+      text-align: center; font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+    }
+    footer span { color: var(--accent3); }
+
+    @media (max-width: 768px) {
+      .nav-links { gap: 18px; }
+      section { padding: 56px 0; }
+      .stat-row { gap: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">← nn.dev</a>
+    <div class="nav-links">
+      <a href="#stack">Stack</a>
+      <a href="#services">Services</a>
+      <a href="#network">Network</a>
+      <a href="#hardware">Hardware</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-inner container">
+    <div class="hero-eyebrow">Self-hosted infrastructure</div>
+    <h1>homelab<span>3000.</span></h1>
+    <p class="hero-sub">
+      A personal self-hosted server running Ubuntu with a full Docker-based stack — 
+      media, home automation, remote access, and monitoring. Everything under my own roof.
+    </p>
+    <div class="stat-row">
+      <div class="stat">
+        <span class="stat-val">Ubuntu</span>
+        <span class="stat-label">Host OS</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">2 TB</span>
+        <span class="stat-label">SSD Storage</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">Docker</span>
+        <span class="stat-label">Container Runtime</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">Tailscale</span>
+        <span class="stat-label">Remote Access</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ARCHITECTURE -->
+<section>
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Architecture</div>
+      <h2>How it fits together.</h2>
+    </div>
+    <div class="arch-wrap reveal">
+      <div class="arch"><span class="hl3">homelab3000 — Ubuntu Server</span>
+├── <span class="hl">Docker Engine</span>
+│   ├── <span class="hl2">Media Stack</span>
+│   │   ├── Jellyfin        <span class="hl3">// media server — streams to any device</span>
+│   │   ├── Radarr          <span class="hl3">// movie library manager</span>
+│   │   ├── Sonarr          <span class="hl3">// TV library manager</span>
+│   │   ├── Prowlarr        <span class="hl3">// indexer aggregator</span>
+│   │   ├── qBittorrent     <span class="hl3">// DVD rip ingestion & download client</span>
+│   │   └── Jellyseerr      <span class="hl3">// request & discovery frontend</span>
+│   │
+│   ├── <span class="hl2">Home Automation</span>
+│   │   └── Home Assistant  <span class="hl3">// smart home hub</span>
+│   │
+│   └── <span class="hl2">Management</span>
+│       └── Portainer       <span class="hl3">// Docker container UI</span>
+│
+├── <span class="hl">Tailscale VPN</span>           <span class="hl3">// mesh VPN, IP: 100.117.21.82</span>
+│   └── remote access from anywhere, zero port forwarding
+│
+└── <span class="hl">Storage</span>
+    └── /mnt/storage        <span class="hl3">// 2 TB SSD — media, configs, volumes</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Services</div>
+      <h2>Running containers.</h2>
+    </div>
+    <div class="cards">
+
+      <div class="card reveal">
+        <div class="card-icon">🎬</div>
+        <div class="card-tag">Media</div>
+        <h3>Jellyfin</h3>
+        <p>Self-hosted media server that streams movies and TV shows to any device on the network — or remotely over Tailscale. No subscriptions, no tracking.</p>
+        <div class="pill-row">
+          <span class="pill pill-g">Docker</span>
+          <span class="pill pill-a">Streams to any device</span>
+        </div>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon">🎥</div>
+        <div class="card-tag">Media Management</div>
+        <h3>Radarr + Sonarr</h3>
+        <p>Automated movie and TV library managers. Monitor for new releases, rename files correctly, and keep the Jellyfin library organized and up to date.</p>
+        <div class="pill-row">
+          <span class="pill pill-g">Docker</span>
+          <span class="pill">Auto-organize</span>
+        </div>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon">🔍</div>
+        <div class="card-tag">Indexer</div>
+        <h3>Prowlarr</h3>
+        <p>Centralized indexer manager that feeds Radarr and Sonarr. Manages all sources from one place so the media stack can find what it's looking for.</p>
+        <div class="pill-row">
+          <span class="pill pill-g">Docker</span>
+          <span class="pill">Unified indexing</span>
+        </div>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon">💿</div>
+        <div class="card-tag">Ingestion</div>
+        <h3>qBittorrent</h3>
+        <p>Handles ingestion of personal DVD rips and digital backups into the media library. Integrates with Radarr and Sonarr to automate the import pipeline.</p>
+        <div class="pill-row">
+          <span class="pill pill-g">Docker</span>
+          <span class="pill">DVD rips</span>
+          <span class="pill">Personal backups</span>
+        </div>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon">🍿</div>
+        <div class="card-tag">Discovery</div>
+        <h3>Jellyseerr</h3>
+        <p>A clean request and discovery frontend for Jellyfin. Browse what's available, request new titles, and let the automation stack handle the rest.</p>
+        <div class="pill-row">
+          <span class="pill pill-g">Docker</span>
+          <span class="pill pill-v">Request UI</span>
+        </div>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon">🏠</div>
+        <div class="card-tag">Automation</div>
+        <h3>Home Assistant</h3>
+        <p>The brain of the smart home. Controls lights, sensors, automations, and integrations — fully local, no cloud dependency. Exploring motorized blind control via ESP32.</p>
+        <div class="pill-row">
+          <span class="pill pill-g">Docker</span>
+          <span class="pill pill-v">ESP32 integration</span>
+          <span class="pill">Local-first</span>
+        </div>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon">🐋</div>
+        <div class="card-tag">Management</div>
+        <h3>Portainer</h3>
+        <p>Web UI for managing all Docker containers, images, volumes, and networks. Makes it easy to monitor the stack, restart services, and inspect logs.</p>
+        <div class="pill-row">
+          <span class="pill pill-g">Docker</span>
+          <span class="pill">Container UI</span>
+        </div>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon">🔒</div>
+        <div class="card-tag">Remote Access</div>
+        <h3>Tailscale</h3>
+        <p>Zero-config mesh VPN that makes the homelab accessible from anywhere — phone, laptop, anywhere — without exposing any ports to the internet.</p>
+        <div class="pill-row">
+          <span class="pill pill-a">100.117.21.82</span>
+          <span class="pill">No port forwarding</span>
+          <span class="pill pill-g">WireGuard</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- NETWORK -->
+<section id="network">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Network</div>
+      <h2>Access & connectivity.</h2>
+    </div>
+    <div class="network-grid reveal">
+      <div class="net-node">
+        <div class="net-node-title"><span class="status-dot"></span>homelab3000</div>
+        <div class="net-node-ip">100.117.21.82</div>
+        <p>Ubuntu host. All services run here inside Docker containers. Accessible on the Tailscale mesh from any device.</p>
+      </div>
+      <div class="net-node">
+        <div class="net-node-title"><span class="status-dot"></span>Tailscale Mesh</div>
+        <div class="net-node-ip">100.x.x.x subnet</div>
+        <p>WireGuard-backed mesh VPN. Every authorized device gets a stable IP. No dynamic DNS headaches, no open ports.</p>
+      </div>
+      <div class="net-node">
+        <div class="net-node-title"><span class="status-dot"></span>Storage</div>
+        <div class="net-node-ip">/mnt/storage</div>
+        <p>2 TB SSD mounted at /mnt/storage. All Docker volumes, media libraries, and configs live here.</p>
+      </div>
+      <div class="net-node">
+        <div class="net-node-title"><span class="status-dot"></span>Home Assistant</div>
+        <div class="net-node-ip">Local LAN</div>
+        <p>Smart home hub running entirely on the local network. No cloud required for automations or device control.</p>
+      </div>
+    </div>
+
+    <div class="terminal reveal" style="margin-top: 32px;">
+      <div class="terminal-bar">
+        <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+      </div>
+      <div class="terminal-body">
+        <div><span class="t-prompt">~</span> <span class="t-cmd">tailscale status</span></div>
+        <div class="t-out"><span class="t-hl">100.117.21.82</span>  homelab3000   linux   <span class="t-hl">online</span></div>
+        <div class="t-out"><span class="t-hl">100.x.x.x</span>      macbook       macOS   <span class="t-hl">online</span></div>
+        <div class="t-out"><span class="t-hl">100.x.x.x</span>      pixel-phone   android <span class="t-hl">online</span></div>
+        <div style="margin-top: 6px;"><span class="t-prompt">~</span> <span class="t-cmd">df -h /mnt/storage</span></div>
+        <div class="t-out">Filesystem      Size  Used Avail Use%</div>
+        <div class="t-out">/dev/sda1       <span class="t-hl">2.0T</span>  1.1T  900G  56%  /mnt/storage</div>
+        <div style="margin-top: 6px;"><span class="t-prompt">~</span> <span class="t-cmd">docker ps --format "table {{.Names}}\t{{.Status}}"</span></div>
+        <div class="t-out">NAMES              STATUS</div>
+        <div class="t-out"><span class="t-hl2">jellyfin</span>           Up 14 days</div>
+        <div class="t-out"><span class="t-hl2">radarr</span>             Up 14 days</div>
+        <div class="t-out"><span class="t-hl2">sonarr</span>             Up 14 days</div>
+        <div class="t-out"><span class="t-hl2">prowlarr</span>           Up 14 days</div>
+        <div class="t-out"><span class="t-hl2">qbittorrent</span>        Up 14 days</div>
+        <div class="t-out"><span class="t-hl2">jellyseerr</span>         Up 14 days</div>
+        <div class="t-out"><span class="t-hl2">homeassistant</span>      Up 14 days</div>
+        <div class="t-out"><span class="t-hl2">portainer</span>          Up 14 days</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- HARDWARE -->
+<section id="hardware">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Hardware</div>
+      <h2>The full stack.</h2>
+    </div>
+    <div class="arch-wrap reveal">
+      <table class="stack-table">
+        <thead>
+          <tr>
+            <th>Role</th>
+            <th>Component</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>OS</td>
+            <td>Ubuntu Server <span class="badge badge-g">LTS</span></td>
+            <td>Headless install, SSH access, Docker installed</td>
+          </tr>
+          <tr>
+            <td>Runtime</td>
+            <td>Docker Engine <span class="badge badge-g">+ Compose</span></td>
+            <td>All services containerized, compose files per stack</td>
+          </tr>
+          <tr>
+            <td>Storage</td>
+            <td>2 TB SSD <span class="badge badge-a">/mnt/storage</span></td>
+            <td>Media library, Docker volumes, config backups</td>
+          </tr>
+          <tr>
+            <td>VPN</td>
+            <td>Tailscale <span class="badge badge-v">WireGuard</span></td>
+            <td>Mesh network, stable IPs, no exposed ports</td>
+          </tr>
+          <tr>
+            <td>Media Server</td>
+            <td>Jellyfin</td>
+            <td>Hardware transcoding, streams over LAN + Tailscale</td>
+          </tr>
+          <tr>
+            <td>Automation</td>
+            <td>Home Assistant <span class="badge badge-a">IoT</span></td>
+            <td>Local-first, ESP32 integrations in progress</td>
+          </tr>
+          <tr>
+            <td>Management</td>
+            <td>Portainer CE</td>
+            <td>Container lifecycle, logs, resource stats</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>Part of <span>Nick Nauth's</span> portfolio · <a href="index.html" style="color: var(--accent3);">← back to main site</a></p>
+</footer>
+
+<script>
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('visible'); obs.unobserve(en.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
