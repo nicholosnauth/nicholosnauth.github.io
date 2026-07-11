@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nick Nauth — Building an 8-bit Dante's Inferno in the browser</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d0f14;
+      --surface:  #13161d;
+      --border:   #1e2330;
+      --text:     #e8eaf0;
+      --muted:    #6b7280;
+      --accent:   #4ade9e;
+      --accent2:  #7c6af7;
+      --font-head: 'Space Grotesk', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-head); font-size: 16px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    .container { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── NAV ── */
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(13,15,20,0.88); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; max-width: 1040px; margin: 0 auto; }
+    .nav-logo { font-family: var(--font-mono); font-size: 14px; color: var(--accent); letter-spacing: 0.04em; }
+    .nav-links { display: flex; gap: 32px; }
+    .nav-links a { font-size: 13px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text); }
+
+    /* ── POST HEADER ── */
+    .post-header { padding: 150px 24px 50px; }
+    .post-tag { font-family: var(--font-mono); font-size: 12px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .post-tag::before { content: ''; display: block; width: 32px; height: 1px; background: var(--accent); }
+    .post-header h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 18px; }
+    .post-date { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+
+    .divider { width: 100%; height: 1px; background: linear-gradient(90deg, var(--border), transparent); margin: 0 auto; max-width: 760px; }
+
+    /* ── ARTICLE BODY ── */
+    article { padding: 56px 0 96px; }
+    article h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; margin: 40px 0 16px; }
+    article h2:first-child { margin-top: 0; }
+    article h3 { font-size: 18px; font-weight: 600; margin: 28px 0 12px; color: var(--text); }
+    article p { font-size: 16px; color: var(--text); line-height: 1.85; margin-bottom: 20px; }
+    article p.lede { font-size: 18px; color: var(--muted); }
+    article strong { color: var(--text); font-weight: 600; }
+    article a.inline-link { color: var(--accent); border-bottom: 1px solid rgba(74,222,158,0.3); }
+    article a.inline-link:hover { border-color: var(--accent); }
+    article ul, article ol { margin: 0 0 20px 22px; color: var(--text); }
+    article li { margin-bottom: 8px; line-height: 1.7; }
+    article li::marker { color: var(--accent); }
+    article blockquote {
+      border-left: 3px solid var(--accent); padding: 4px 0 4px 20px;
+      margin: 28px 0; color: var(--muted); font-style: italic; font-size: 16px;
+    }
+    article code {
+      font-family: var(--font-mono); font-size: 13.5px; background: var(--surface);
+      border: 1px solid var(--border); padding: 2px 6px; border-radius: 4px; color: var(--accent);
+    }
+    article pre {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 20px; overflow-x: auto; margin: 24px 0;
+    }
+    article pre code { background: none; border: none; padding: 0; color: var(--text); font-size: 13.5px; line-height: 1.7; }
+
+    .post-nav { display: flex; justify-content: space-between; align-items: center; padding-top: 32px; margin-top: 40px; border-top: 1px solid var(--border); }
+    .post-nav a { font-size: 13px; font-weight: 600; color: var(--accent); display: inline-flex; align-items: center; gap: 6px; }
+
+    /* ── FOOTER ── */
+    footer { border-top: 1px solid var(--border); padding: 28px 24px; text-align: center; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+    footer span { color: var(--accent); }
+
+    @media (max-width: 768px) {
+      .nav-links { gap: 18px; }
+      .post-header { padding: 130px 24px 40px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">← nn.dev</a>
+    <div class="nav-links">
+      <a href="blog.html">Blog</a>
+      <a href="index.html#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- POST HEADER -->
+<header class="post-header container">
+  <div class="post-tag">Devlog · Game Dev</div>
+  <h1>Building an 8-bit Dante's Inferno in the browser</h1>
+  <div class="post-date">Jul 11, 2026 · 4 min read</div>
+</header>
+
+<div class="divider"></div>
+
+<!-- ARTICLE BODY -->
+<article class="container">
+  <p class="lede">
+    INFERNO: The Nine Circles started as a joke — "what if Dante's Inferno,
+    but it's a Game Boy game" — and turned into a full weekend build with its
+    own camera module, platformer physics, and nine actual levels.
+  </p>
+
+  <h2>Why Dante's Inferno</h2>
+  <p>
+    I wanted a project with a built-in structure I didn't have to invent —
+    nine circles of hell map almost too perfectly onto nine progressively
+    harder platformer levels. Limbo as a gentle tutorial, Treachery as the
+    final gauntlet. The source material did the level design for me.
+  </p>
+
+  <h2>The camera problem</h2>
+  <p>
+    Early builds had the camera locked rigidly to the player, which felt
+    stiff and made fast platforming sections nauseating. I pulled the camera
+    logic out into its own <code>camera.js</code> module so I could iterate
+    on it independently of the game loop.
+  </p>
+  <p>
+    Two things made the biggest difference:
+  </p>
+  <ul>
+    <li><strong>Smoothing</strong> — the camera lerps toward the player's position instead of snapping, so it settles rather than jerks.</li>
+    <li><strong>Shake mechanics</strong> — on hits and falls, a decaying random offset gets added to the camera position for a punchy, retro-console feel.</li>
+  </ul>
+
+  <blockquote>
+    Pulling the camera into its own file was the single best refactor of the
+    whole project — every other system got easier to reason about once it
+    wasn't tangled up in render logic.
+  </blockquote>
+
+  <h2>What's next</h2>
+  <p>
+    I'd like to add a proper boss fight for the final circle (Treachery) and
+    experiment with a chiptune soundtrack. If you want to see the code, the
+    game is playable directly from the
+    <a href="dantes-inferno-8bit.html" class="inline-link">case study page</a>.
+  </p>
+
+  <div class="post-nav">
+    <a href="blog.html">← Back to all posts</a>
+  </div>
+</article>
+
+<!-- FOOTER -->
+<footer>
+  <p>Built by <span>Nick Nauth</span> · <span id="year"></span> · <a href="index.html">← back to portfolio</a></p>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
