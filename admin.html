@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin — nn.dev</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0f14; --surface: #13161d; --surface2: #181c26; --border: #1e2330;
+    --text: #e8eaf0; --muted: #6b7280; --accent: #4ade9e; --accent2: #7c6af7;
+    --danger: #f87171;
+    --font-head: 'Space Grotesk', sans-serif; --font-mono: 'Space Mono', monospace;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-head); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+  a { color: inherit; }
+  .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(13,15,20,0.92); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; max-width: 900px; margin: 0 auto; }
+  .nav-logo { font-family: var(--font-mono); font-size: 14px; color: var(--accent); letter-spacing: 0.04em; }
+  .nav-right { display: flex; align-items: center; gap: 16px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+  .nav-right button { font-family: var(--font-mono); font-size: 12px; }
+
+  main { padding: 48px 0 96px; }
+  h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
+
+  /* ── LOGIN ── */
+  .login-card {
+    max-width: 460px; margin: 60px auto 0; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 14px; padding: 36px;
+  }
+  .login-card h1 { font-size: 22px; text-align: center; }
+  .login-card .sub { text-align: center; }
+  label { display: block; font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
+  input[type="text"], input[type="password"], input[type="date"], input[type="number"], textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: 11px 13px; color: var(--text); font-family: var(--font-head); font-size: 14px;
+    outline: none; transition: border-color 0.2s; margin-bottom: 18px; resize: vertical;
+  }
+  input:focus, textarea:focus { border-color: var(--accent); }
+  input::placeholder, textarea::placeholder { color: #3a4152; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; margin: -8px 0 18px; }
+  .checkbox-row input { width: auto; margin: 0; }
+  .checkbox-row label { margin: 0; text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--text); font-family: var(--font-head); }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 22px; font-family: var(--font-head); font-size: 14px; font-weight: 600; border-radius: 6px; cursor: pointer; border: none; transition: all 0.2s; }
+  .btn-primary { background: var(--accent); color: #0d0f14; width: 100%; }
+  .btn-primary:hover { background: #6bedb0; }
+  .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger { background: transparent; color: var(--danger); border: 1px solid rgba(248,113,113,0.3); }
+  .btn-danger:hover { border-color: var(--danger); background: rgba(248,113,113,0.08); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-sm { padding: 7px 14px; font-size: 12.5px; }
+
+  .help-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; font-size: 12.5px; color: var(--muted); line-height: 1.7; margin-top: 20px; }
+  .help-box code { font-family: var(--font-mono); background: var(--bg); padding: 1px 5px; border-radius: 3px; color: var(--accent); }
+  .help-box a { color: var(--accent); text-decoration: underline; }
+
+  .error-msg { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.3); color: var(--danger); border-radius: 8px; padding: 12px 16px; font-size: 13px; margin-bottom: 18px; display: none; }
+  .status-msg { background: rgba(74,222,158,0.08); border: 1px solid rgba(74,222,158,0.3); color: var(--accent); border-radius: 8px; padding: 12px 16px; font-size: 13px; margin-bottom: 18px; display: none; }
+
+  /* ── DASHBOARD ── */
+  .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .post-row {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; margin-bottom: 12px;
+  }
+  .post-row-info { min-width: 0; }
+  .post-row-title { font-size: 15px; font-weight: 600; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .post-row-meta { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+  .post-row-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .empty { text-align: center; padding: 50px 20px; color: var(--muted); border: 1px dashed var(--border); border-radius: 12px; font-family: var(--font-mono); font-size: 13px; }
+  .loading { text-align: center; padding: 40px; color: var(--muted); font-family: var(--font-mono); font-size: 13px; }
+
+  /* ── EDITOR ── */
+  .editor-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; }
+  .editor-card h2 { font-size: 18px; margin-bottom: 20px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .legend span { font-family: var(--font-mono); font-size: 10.5px; padding: 3px 8px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--muted); }
+  textarea.body-editor { min-height: 320px; font-family: var(--font-mono); font-size: 13px; line-height: 1.6; }
+  .editor-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
+
+  .hidden { display: none !important; }
+  footer { border-top: 1px solid var(--border); padding: 24px; text-align: center; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); margin-top: 40px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LOGIN SCREEN ══════════════ -->
+<div id="login-screen">
+  <nav><div class="nav-inner"><a href="index.html" class="nav-logo">← nn.dev</a></div></nav>
+  <main>
+    <div class="login-card">
+      <h1>Admin sign in</h1>
+      <p class="sub">Log in with a GitHub token to create or edit posts.</p>
+
+      <div class="error-msg" id="login-error"></div>
+
+      <label for="repo-owner">Repo owner</label>
+      <input type="text" id="repo-owner" value="nicholosnauth" placeholder="github username">
+      <label for="repo-name">Repo name</label>
+      <input type="text" id="repo-name" value="nicholosnauth.github.io" placeholder="repo name">
+      <label for="repo-branch">Branch</label>
+      <input type="text" id="repo-branch" value="main" placeholder="main">
+      <label for="gh-token">GitHub personal access token</label>
+      <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+
+      <div class="checkbox-row">
+        <input type="checkbox" id="remember-token">
+        <label for="remember-token">Remember this token on this device</label>
+      </div>
+
+      <button class="btn btn-primary" id="login-btn">Sign in</button>
+
+      <div class="help-box">
+        Needs a token with write access to this repo's contents.<br><br>
+        <strong>How to create one:</strong> GitHub → Settings →
+        <a href="https://github.com/settings/tokens?type=beta" target="_blank">Developer settings → Fine-grained tokens</a>
+        → New token → set <strong>Repository access</strong> to just this repo →
+        under <strong>Permissions</strong>, set <code>Contents: Read and write</code> → Generate.<br><br>
+        The token is stored only in this browser (if you check "remember"), never sent anywhere except
+        directly to GitHub's API. Anyone with the token can edit this repo, so keep it private and
+        revoke it from GitHub's settings any time.
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ══════════════ APP (DASHBOARD + EDITOR) ══════════════ -->
+<div id="app" class="hidden">
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">← nn.dev</a>
+      <div class="nav-right">
+        <span id="whoami"></span>
+        <button class="btn btn-ghost btn-sm" id="logout-btn">Log out</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="status-msg" id="app-status"></div>
+    <div class="error-msg" id="app-error"></div>
+
+    <!-- DASHBOARD VIEW -->
+    <div id="dashboard-view">
+      <div class="toolbar">
+        <div>
+          <h1>Posts</h1>
+          <p class="sub">Create, edit, or delete blog posts. Changes commit straight to your repo.</p>
+        </div>
+        <button class="btn btn-primary" id="new-post-btn" style="width:auto;">+ New post</button>
+      </div>
+      <div id="posts-list"><div class="loading">Loading posts…</div></div>
+    </div>
+
+    <!-- EDITOR VIEW -->
+    <div id="editor-view" class="hidden">
+      <div class="toolbar">
+        <h1 id="editor-heading">New post</h1>
+      </div>
+      <div class="editor-card">
+        <label for="f-title">Title</label>
+        <input type="text" id="f-title" placeholder="Building an 8-bit Dante's Inferno in the browser">
+
+        <div class="field-row">
+          <div>
+            <label for="f-tag">Category / tag</label>
+            <input type="text" id="f-tag" placeholder="Devlog · Game Dev">
+          </div>
+          <div>
+            <label for="f-date">Publish date</label>
+            <input type="date" id="f-date">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div>
+            <label for="f-readtime">Read time (minutes)</label>
+            <input type="number" id="f-readtime" value="4" min="1">
+          </div>
+          <div>
+            <label for="f-featured">Featured (full-width card)</label>
+            <div class="checkbox-row" style="margin-top: 11px;">
+              <input type="checkbox" id="f-featured">
+              <label for="f-featured">Show as featured on blog index</label>
+            </div>
+          </div>
+        </div>
+
+        <label for="f-excerpt">Excerpt (shown on the blog list card)</label>
+        <textarea id="f-excerpt" rows="3" placeholder="A short 1-2 sentence summary for the post card…"></textarea>
+
+        <label for="f-body">Body (HTML)</label>
+        <div class="legend">
+          <span>&lt;p&gt;</span><span>&lt;h2&gt;</span><span>&lt;h3&gt;</span>
+          <span>&lt;strong&gt;</span><span>&lt;a class="inline-link"&gt;</span>
+          <span>&lt;ul&gt;&lt;li&gt;</span><span>&lt;blockquote&gt;</span>
+          <span>&lt;pre&gt;&lt;code&gt;</span><span>&lt;img&gt;</span>
+        </div>
+        <textarea id="f-body" class="body-editor" placeholder="&lt;p class=&quot;lede&quot;&gt;Opening paragraph…&lt;/p&gt;
+
+&lt;h2&gt;A section&lt;/h2&gt;
+&lt;p&gt;More text…&lt;/p&gt;"></textarea>
+
+        <div class="editor-actions">
+          <button class="btn btn-ghost" id="cancel-edit-btn">Cancel</button>
+          <button class="btn btn-danger hidden" id="delete-post-btn">Delete post</button>
+          <button class="btn btn-primary" id="save-post-btn" style="width:auto;">Save & publish</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>nn.dev admin · commits go straight to your GitHub repo · no server, no database</footer>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   CONFIG / STATE
+   ══════════════════════════════════════════════════════════════ */
+let CFG = { owner: '', repo: '', branch: 'main', token: '' };
+let currentEditFilename = null; // null = creating a new post
+
+const $ = (id) => document.getElementById(id);
+
+/* ══════════════════════════════════════════════════════════════
+   GITHUB API HELPERS
+   ══════════════════════════════════════════════════════════════ */
+function apiBase() { return `https://api.github.com/repos/${CFG.owner}/${CFG.repo}`; }
+
+async function ghRequest(path, options = {}) {
+  const res = await fetch(`${apiBase()}${path}`, {
+    ...options,
+    headers: {
+      'Authorization': `Bearer ${CFG.token}`,
+      'Accept': 'application/vnd.github+json',
+      ...(options.headers || {})
+    }
+  });
+  if (!res.ok) {
+    let msg = `GitHub API error (${res.status})`;
+    try { const j = await res.json(); if (j.message) msg += `: ${j.message}`; } catch (e) {}
+    throw new Error(msg);
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+function utf8ToBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin);
+}
+function base64ToUtf8(b64) {
+  const bin = atob(b64.replace(/\n/g, ''));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
+async function getFile(path) {
+  // returns { content, sha } or null if not found
+  try {
+    const data = await ghRequest(`/contents/${encodeURIComponent(path)}?ref=${CFG.branch}`);
+    return { content: base64ToUtf8(data.content), sha: data.sha };
+  } catch (e) {
+    if (e.message.includes('404')) return null;
+    throw e;
+  }
+}
+
+async function putFile(path, content, sha, message) {
+  return ghRequest(`/contents/${encodeURIComponent(path)}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      message,
+      content: utf8ToBase64(content),
+      branch: CFG.branch,
+      ...(sha ? { sha } : {})
+    })
+  });
+}
+
+async function deleteFile(path, sha, message) {
+  return ghRequest(`/contents/${encodeURIComponent(path)}`, {
+    method: 'DELETE',
+    body: JSON.stringify({ message, sha, branch: CFG.branch })
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   AUTH / SESSION
+   ══════════════════════════════════════════════════════════════ */
+function loadSavedSession() {
+  const saved = localStorage.getItem('nn_admin_session');
+  if (!saved) return null;
+  try { return JSON.parse(saved); } catch (e) { return null; }
+}
+
+function saveSession(remember) {
+  if (remember) {
+    localStorage.setItem('nn_admin_session', JSON.stringify(CFG));
+  } else {
+    sessionStorage.setItem('nn_admin_session', JSON.stringify(CFG));
+  }
+}
+
+function clearSession() {
+  localStorage.removeItem('nn_admin_session');
+  sessionStorage.removeItem('nn_admin_session');
+}
+
+async function tryLogin(cfg) {
+  CFG = cfg;
+  const me = await fetch('https://api.github.com/user', {
+    headers: { 'Authorization': `Bearer ${CFG.token}`, 'Accept': 'application/vnd.github+json' }
+  });
+  if (!me.ok) throw new Error('Invalid or expired token.');
+  const meJson = await me.json();
+  // Verify repo access explicitly (throws if token can't see this repo)
+  await ghRequest('');
+  return meJson.login;
+}
+
+$('login-btn').addEventListener('click', async () => {
+  const cfg = {
+    owner: $('repo-owner').value.trim(),
+    repo: $('repo-name').value.trim(),
+    branch: $('repo-branch').value.trim() || 'main',
+    token: $('gh-token').value.trim()
+  };
+  $('login-error').style.display = 'none';
+  if (!cfg.owner || !cfg.repo || !cfg.token) {
+    $('login-error').textContent = 'Please fill in owner, repo, and token.';
+    $('login-error').style.display = 'block';
+    return;
+  }
+  $('login-btn').disabled = true;
+  $('login-btn').textContent = 'Signing in…';
+  try {
+    const login = await tryLogin(cfg);
+    saveSession($('remember-token').checked);
+    enterApp(login);
+  } catch (e) {
+    $('login-error').textContent = e.message || 'Could not sign in — check your token and repo access.';
+    $('login-error').style.display = 'block';
+  } finally {
+    $('login-btn').disabled = false;
+    $('login-btn').textContent = 'Sign in';
+  }
+});
+
+$('logout-btn').addEventListener('click', () => {
+  clearSession();
+  location.reload();
+});
+
+function enterApp(login) {
+  $('login-screen').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  $('whoami').textContent = `${CFG.owner}/${CFG.repo} · @${login}`;
+  showDashboard();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STATUS / ERROR HELPERS
+   ══════════════════════════════════════════════════════════════ */
+function showStatus(msg) {
+  const el = $('app-status');
+  el.textContent = msg; el.style.display = 'block';
+  $('app-error').style.display = 'none';
+  setTimeout(() => el.style.display = 'none', 6000);
+}
+function showError(msg) {
+  const el = $('app-error');
+  el.textContent = msg; el.style.display = 'block';
+  $('app-status').style.display = 'none';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DASHBOARD — parse posts out of blog.html
+   ══════════════════════════════════════════════════════════════ */
+function parseCards(blogHtml) {
+  const cards = [];
+  const re = /<a href="([^"]+)" class="post-card([^"]*)"[^>]*data-post="([^"]+)"[\s\S]*?<span class="post-tag">([\s\S]*?)<\/span>[\s\S]*?<span class="post-date">([\s\S]*?)<\/span>[\s\S]*?<h3>([\s\S]*?)<\/h3>[\s\S]*?<p>([\s\S]*?)<\/p>[\s\S]*?<\/a>/g;
+  let m;
+  while ((m = re.exec(blogHtml)) !== null) {
+    cards.push({
+      href: m[1],
+      featured: m[2].includes('featured'),
+      filename: m[3],
+      tag: m[4].trim(),
+      date: m[5].trim(),
+      title: m[6].trim(),
+      excerpt: m[7].trim()
+    });
+  }
+  return cards;
+}
+
+async function showDashboard() {
+  $('dashboard-view').classList.remove('hidden');
+  $('editor-view').classList.add('hidden');
+  $('posts-list').innerHTML = '<div class="loading">Loading posts…</div>';
+  try {
+    const blogFile = await getFile('blog.html');
+    if (!blogFile) throw new Error('Could not find blog.html in this repo.');
+    const cards = parseCards(blogFile.content);
+    if (cards.length === 0) {
+      $('posts-list').innerHTML = '<div class="empty">// no posts yet — click "New post" to write one</div>';
+      return;
+    }
+    $('posts-list').innerHTML = cards.map(c => `
+      <div class="post-row">
+        <div class="post-row-info">
+          <div class="post-row-title">${escapeHtml(c.title)}</div>
+          <div class="post-row-meta">${escapeHtml(c.date)} · ${escapeHtml(c.tag)}${c.featured ? ' · featured' : ''}</div>
+        </div>
+        <div class="post-row-actions">
+          <a href="${escapeAttr(c.filename)}" target="_blank" class="btn btn-ghost btn-sm">View</a>
+          <button class="btn btn-ghost btn-sm" data-edit="${escapeAttr(c.filename)}">Edit</button>
+        </div>
+      </div>
+    `).join('');
+    $('posts-list').querySelectorAll('[data-edit]').forEach(btn => {
+      btn.addEventListener('click', () => openEditor(btn.getAttribute('data-edit')));
+    });
+  } catch (e) {
+    $('posts-list').innerHTML = '';
+    showError(e.message);
+  }
+}
+
+function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeAttr(s) { return escapeHtml(s); }
+
+/* ══════════════════════════════════════════════════════════════
+   EDITOR — new / edit / delete
+   ══════════════════════════════════════════════════════════════ */
+function slugify(title) {
+  return title.toLowerCase().trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .slice(0, 60);
+}
+
+function todayStr() {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
+
+function formatDisplayDate(dateStr, readMin) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const opts = { month: 'short', day: 'numeric', year: 'numeric' };
+  return `${d.toLocaleDateString('en-US', opts)} · ${readMin} min read`;
+}
+
+$('new-post-btn').addEventListener('click', () => openEditor(null));
+$('cancel-edit-btn').addEventListener('click', showDashboard);
+
+async function openEditor(filename) {
+  currentEditFilename = filename;
+  $('dashboard-view').classList.add('hidden');
+  $('editor-view').classList.remove('hidden');
+  $('delete-post-btn').classList.toggle('hidden', !filename);
+
+  if (!filename) {
+    $('editor-heading').textContent = 'New post';
+    $('f-title').value = '';
+    $('f-tag').value = '';
+    $('f-date').value = todayStr();
+    $('f-readtime').value = 4;
+    $('f-featured').checked = false;
+    $('f-excerpt').value = '';
+    $('f-body').value = '';
+    return;
+  }
+
+  $('editor-heading').textContent = 'Edit post';
+  try {
+    const [postFile, blogFile] = await Promise.all([getFile(filename), getFile('blog.html')]);
+    if (!postFile) throw new Error(`Could not find ${filename}`);
+    const cards = parseCards(blogFile.content);
+    const card = cards.find(c => c.filename === filename) || {};
+
+    const titleMatch = postFile.content.match(/<h1>([\s\S]*?)<\/h1>/);
+    const tagMatch = postFile.content.match(/<div class="post-tag">([\s\S]*?)<\/div>/);
+    const bodyMatch = postFile.content.match(/<div id="post-body">([\s\S]*?)<\/div>\s*<div class="post-nav">/);
+
+    $('f-title').value = titleMatch ? titleMatch[1].trim() : (card.title || '');
+    $('f-tag').value = tagMatch ? tagMatch[1].trim() : (card.tag || '');
+    $('f-date').value = todayStr(); // publish date isn't stored structurally; defaults to today, edit if needed
+    $('f-readtime').value = 4;
+    $('f-featured').checked = !!card.featured;
+    $('f-excerpt').value = card.excerpt || '';
+    $('f-body').value = bodyMatch ? bodyMatch[1].trim() : '';
+  } catch (e) {
+    showError(e.message);
+    showDashboard();
+  }
+}
+
+function buildPostHtml({ title, tag, dateDisplay, bodyHtml }) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nick Nauth — ${escapeHtml(title)}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d0f14; --surface: #13161d; --border: #1e2330; --text: #e8eaf0;
+      --muted: #6b7280; --accent: #4ade9e; --accent2: #7c6af7;
+      --font-head: 'Space Grotesk', sans-serif; --font-mono: 'Space Mono', monospace;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-head); font-size: 16px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    .container { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(13,15,20,0.88); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; max-width: 1040px; margin: 0 auto; }
+    .nav-logo { font-family: var(--font-mono); font-size: 14px; color: var(--accent); letter-spacing: 0.04em; }
+    .nav-links { display: flex; gap: 32px; }
+    .nav-links a { font-size: 13px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text); }
+    .post-header { padding: 150px 24px 50px; }
+    .post-tag { font-family: var(--font-mono); font-size: 12px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .post-tag::before { content: ''; display: block; width: 32px; height: 1px; background: var(--accent); }
+    .post-header h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 18px; }
+    .post-date { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+    .divider { width: 100%; height: 1px; background: linear-gradient(90deg, var(--border), transparent); margin: 0 auto; max-width: 760px; }
+    article { padding: 56px 0 96px; }
+    article h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; margin: 40px 0 16px; }
+    article h2:first-child { margin-top: 0; }
+    article h3 { font-size: 18px; font-weight: 600; margin: 28px 0 12px; color: var(--text); }
+    article p { font-size: 16px; color: var(--text); line-height: 1.85; margin-bottom: 20px; }
+    article p.lede { font-size: 18px; color: var(--muted); }
+    article strong { color: var(--text); font-weight: 600; }
+    article a.inline-link { color: var(--accent); border-bottom: 1px solid rgba(74,222,158,0.3); }
+    article a.inline-link:hover { border-color: var(--accent); }
+    article ul, article ol { margin: 0 0 20px 22px; color: var(--text); }
+    article li { margin-bottom: 8px; line-height: 1.7; }
+    article li::marker { color: var(--accent); }
+    article blockquote { border-left: 3px solid var(--accent); padding: 4px 0 4px 20px; margin: 28px 0; color: var(--muted); font-style: italic; font-size: 16px; }
+    article code { font-family: var(--font-mono); font-size: 13.5px; background: var(--surface); border: 1px solid var(--border); padding: 2px 6px; border-radius: 4px; color: var(--accent); }
+    article pre { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; overflow-x: auto; margin: 24px 0; }
+    article pre code { background: none; border: none; padding: 0; color: var(--text); font-size: 13.5px; line-height: 1.7; }
+    article img { max-width: 100%; border-radius: 10px; border: 1px solid var(--border); margin: 24px 0; display: block; }
+    article figcaption { font-family: var(--font-mono); font-size: 12px; color: var(--muted); text-align: center; margin-top: -14px; margin-bottom: 24px; }
+    .post-nav { display: flex; justify-content: space-between; align-items: center; padding-top: 32px; margin-top: 40px; border-top: 1px solid var(--border); }
+    .post-nav a { font-size: 13px; font-weight: 600; color: var(--accent); display: inline-flex; align-items: center; gap: 6px; }
+    footer { border-top: 1px solid var(--border); padding: 28px 24px; text-align: center; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+    footer span { color: var(--accent); }
+    @media (max-width: 768px) { .nav-links { gap: 18px; } .post-header { padding: 130px 24px 40px; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">← nn.dev</a>
+    <div class="nav-links">
+      <a href="blog.html">Blog</a>
+      <a href="index.html#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<header class="post-header container">
+  <div class="post-tag">${tag}</div>
+  <h1>${title}</h1>
+  <div class="post-date">${dateDisplay}</div>
+</header>
+
+<div class="divider"></div>
+
+<article class="container">
+  <div id="post-body">
+  ${bodyHtml}
+  </div>
+
+  <div class="post-nav">
+    <a href="blog.html">← Back to all posts</a>
+  </div>
+</article>
+
+<footer>
+  <p>Built by <span>Nick Nauth</span> · <span id="year"></span> · <a href="index.html">← back to portfolio</a></p>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+<\/script>
+</body>
+</html>
+`;
+}
+
+function buildCardHtml({ filename, title, tag, dateDisplay, excerpt, featured }) {
+  return `      <a href="${filename}" class="post-card${featured ? ' featured' : ''} reveal" data-post="${filename}">
+        <div class="post-meta">
+          <span class="post-tag">${tag}</span>
+          <span class="post-date">${dateDisplay}</span>
+        </div>
+        <h3>${title}</h3>
+        <p>
+          ${excerpt}
+        </p>
+        <span class="post-link">Read post →</span>
+      </a>`;
+}
+
+async function upsertCardInBlogHtml(blogFile, cardData, isNew) {
+  let content = blogFile.content;
+  const cardRe = new RegExp(`\\s*<a href="${cardData.filename.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}"[\\s\\S]*?data-post="${cardData.filename.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}"[\\s\\S]*?<\\/a>`);
+  const newCard = '\n' + buildCardHtml(cardData) + '\n';
+
+  if (isNew) {
+    const marker = '<!-- END POST CARDS — add new <a class="post-card reveal"> blocks above this line -->';
+    if (!content.includes(marker)) throw new Error('Could not find insertion marker in blog.html — has it been edited manually?');
+    content = content.replace(marker, newCard + '\n      ' + marker);
+  } else {
+    if (!cardRe.test(content)) throw new Error(`Could not find existing card for ${cardData.filename} in blog.html`);
+    content = content.replace(cardRe, newCard);
+  }
+  return content;
+}
+
+async function removeCardFromBlogHtml(blogFile, filename) {
+  const escaped = filename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const cardRe = new RegExp(`\\s*<a href="${escaped}"[\\s\\S]*?data-post="${escaped}"[\\s\\S]*?<\\/a>`);
+  if (!cardRe.test(blogFile.content)) throw new Error(`Could not find card for ${filename} to remove.`);
+  return blogFile.content.replace(cardRe, '');
+}
+
+$('save-post-btn').addEventListener('click', async () => {
+  const title = $('f-title').value.trim();
+  const tag = $('f-tag').value.trim();
+  const dateVal = $('f-date').value;
+  const readMin = parseInt($('f-readtime').value, 10) || 4;
+  const featured = $('f-featured').checked;
+  const excerpt = $('f-excerpt').value.trim();
+  const bodyHtml = $('f-body').value.trim();
+
+  if (!title || !tag || !dateVal || !excerpt || !bodyHtml) {
+    showError('Please fill in title, tag, date, excerpt, and body before saving.');
+    return;
+  }
+
+  $('save-post-btn').disabled = true;
+  $('save-post-btn').textContent = 'Saving…';
+  try {
+    const isNew = !currentEditFilename;
+    const filename = isNew ? `blog-${dateVal}-${slugify(title)}.html` : currentEditFilename;
+    const dateDisplay = formatDisplayDate(dateVal, readMin);
+
+    // 1. Write the post file itself
+    const existingPost = isNew ? null : await getFile(filename);
+    const postHtml = buildPostHtml({ title, tag, dateDisplay, bodyHtml });
+    await putFile(filename, postHtml, existingPost ? existingPost.sha : null,
+      isNew ? `Add post: ${title}` : `Update post: ${title}`);
+
+    // 2. Update blog.html's card grid
+    const blogFile = await getFile('blog.html');
+    if (!blogFile) throw new Error('blog.html not found in repo.');
+    const newContent = await upsertCardInBlogHtml(
+      blogFile,
+      { filename, title, tag, dateDisplay, excerpt, featured },
+      isNew
+    );
+    await putFile('blog.html', newContent, blogFile.sha, `Update blog index for: ${title}`);
+
+    showStatus(`Saved! "${title}" is now live at ${filename}`);
+    currentEditFilename = null;
+    showDashboard();
+  } catch (e) {
+    showError(e.message || 'Something went wrong while saving.');
+  } finally {
+    $('save-post-btn').disabled = false;
+    $('save-post-btn').textContent = 'Save & publish';
+  }
+});
+
+$('delete-post-btn').addEventListener('click', async () => {
+  if (!currentEditFilename) return;
+  if (!confirm(`Delete "${currentEditFilename}" permanently? This can't be undone from here.`)) return;
+
+  $('delete-post-btn').disabled = true;
+  $('delete-post-btn').textContent = 'Deleting…';
+  try {
+    const postFile = await getFile(currentEditFilename);
+    if (postFile) await deleteFile(currentEditFilename, postFile.sha, `Delete post: ${currentEditFilename}`);
+
+    const blogFile = await getFile('blog.html');
+    const newContent = await removeCardFromBlogHtml(blogFile, currentEditFilename);
+    await putFile('blog.html', newContent, blogFile.sha, `Remove post from index: ${currentEditFilename}`);
+
+    showStatus('Post deleted.');
+    currentEditFilename = null;
+    showDashboard();
+  } catch (e) {
+    showError(e.message || 'Could not delete this post.');
+  } finally {
+    $('delete-post-btn').disabled = false;
+    $('delete-post-btn').textContent = 'Delete post';
+  }
+});
+
+/* ══════════════════════════════════════════════════════════════
+   INIT
+   ══════════════════════════════════════════════════════════════ */
+(function init() {
+  const saved = loadSavedSession();
+  if (saved && saved.token) {
+    CFG = saved;
+    tryLogin(saved).then(login => enterApp(login)).catch(() => {
+      clearSession();
+    });
+  }
+})();
+</script>
+</body>
+</html>
