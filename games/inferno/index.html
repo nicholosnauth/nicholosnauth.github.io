@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>INFERNO: The Nine Circles</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0a0208; overflow: hidden; }
+  /* the canvas fills the frame; the game letterboxes itself inside */
+  #canvas { display: block; width: 100vw; height: 100vh; image-rendering: pixelated; outline: none; }
+  #hint { position: fixed; inset: auto 0 12px 0; text-align: center; color: #6b5a44;
+          font: 12px monospace; letter-spacing: 2px; pointer-events: none; }
+</style>
+</head>
+<body>
+<canvas id="canvas" tabindex="0" oncontextmenu="event.preventDefault()"></canvas>
+<div id="hint">CLICK TO FOCUS · ARROWS / WASD MOVE · X ATTACK · ENTER START</div>
+<script>
+  // raylib sizes the canvas to this page itself, so it fills an iframe of any size
+  const canvas = document.getElementById('canvas');
+  canvas.addEventListener('click', () => { canvas.focus(); document.getElementById('hint').style.display = 'none'; });
+  // stop arrow keys / space scrolling the page this is embedded in
+  addEventListener('keydown', e => { if ([' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault(); });
+  var Module = { canvas, print: console.log, printErr: console.warn };
+</script>
+<script src="inferno.js"></script>
+</body>
+</html>
