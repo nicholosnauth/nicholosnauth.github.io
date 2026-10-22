@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nick Nauth — Software Developer</title>
+  <title>Nick Nauth | Home automation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -323,11 +323,11 @@
 <section id="hero">
   <div class="hero-grid">
     <div>
-      <div class="hero-eyebrow">Software Developer</div>
+      <div class="hero-eyebrow">Home automation</div>
       <h1>Nick<br><span>Nauth.</span></h1>
       <p class="hero-sub">
-        I build native Android apps with Kotlin and Jetpack Compose — fast, 
-        smooth, and intuitive. Also fluent in iOS, web, and cross-platform.
+        I build smart homes that run locally: Home Assistant, ESP32 hardware, 
+        and a self-hosted server in my own house. I add machine learning when it helps.
       </p>
       <div class="hero-actions">
         <a href="#projects" class="btn btn-primary">View Projects</a>
@@ -343,14 +343,14 @@
       <div class="terminal-body">
         <div><span class="t-prompt">~</span> <span class="t-cmd">whoami</span></div>
         <div class="t-out">nicholos_nauth</div>
-        <div><span class="t-prompt">~</span> <span class="t-cmd">cat stack.txt</span></div>
-        <div class="t-out"><span class="t-hl">Android:</span> Kotlin · Jetpack Compose · SDK</div>
-        <div class="t-out"><span class="t-hl">iOS:</span> Swift · Xcode · XCTest</div>
+        <div><span class="t-prompt">~</span> <span class="t-cmd">cat home.txt</span></div>
+        <div class="t-out"><span class="t-hl">Hub:</span> Home Assistant · Alexa</div>
+        <div class="t-out"><span class="t-hl">Network:</span> Tailscale · Pi-hole</div>
+        <div class="t-out"><span class="t-hl">Server:</span> Ubuntu · Docker · Portainer</div>
+        <div class="t-out"><span class="t-hl">Edge:</span> ESP32 · relay boards</div>
         <div class="t-out"><span class="t-hl">AI/ML:</span> PyTorch · Keras · HuggingFace</div>
-        <div class="t-out"><span class="t-hl">Deploy:</span> FastAPI · Docker · Cloud Run</div>
-        <div class="t-out"><span class="t-hl">Web:</span> Three.js · React · PHP · SQL</div>
         <div><span class="t-prompt">~</span> <span class="t-cmd">git status</span></div>
-        <div class="t-out">On branch main — always building <span class="t-cursor"></span></div>
+        <div class="t-out">On branch main: automating the house <span class="t-cursor"></span></div>
       </div>
     </div>
   </div>
@@ -363,37 +363,35 @@
   <div class="container">
     <div class="reveal">
       <div class="section-label">About me</div>
-      <h2>Code that feels<br>native to the platform.</h2>
+      <h2>Smart homes that<br>run locally.</h2>
     </div>
     <div class="about-grid">
       <div class="reveal about-photo-wrap">
-        <div class="about-photo-fallback">👨‍💻</div>
+        <img src="profile.png" alt="Nick Nauth">
       </div>
       <div class="reveal about-text">
         <p>
-          I'm a software developer with a passion for <strong>native mobile development</strong>. 
-          Whether I'm building for <strong>Android</strong> with Kotlin or <strong>iOS</strong> with Swift, 
-          I care about apps that are fast, smooth, and feel right on the platform they live on.
+          I'm a developer focused on <strong>home automation</strong>. My own house is the test bed: 
+          a <strong>Home Assistant</strong> hub with Alexa, <strong>Tailscale</strong> for remote access, 
+          <strong>Pi-hole</strong> for DNS, and a Docker stack on an Ubuntu server I run myself.
         </p>
         <p>
-          For me, coding isn't just writing lines — it's solving real problems with efficient, 
-          clever solutions. I've worked on everything from custom search engines to booking platforms, 
-          and I enjoy turning complex ideas into simple, user-friendly designs.
+          I keep things local so they keep working when the internet doesn't. Next up are 
+          <strong>ESP32</strong> devices for watering and blinds, reporting into Home Assistant.
         </p>
         <p>
-          I follow <strong>Material Design</strong> and <strong>Human Interface Guidelines</strong> to make sure 
-          interfaces are both intuitive and polished. I'm always learning and adapting — every 
-          project is a chance to build something better.
+          I have a CS degree and an applied AI background, so I'm also working toward 
+          local vision and voice models that trigger automations.
         </p>
         <div class="tag-row">
-          <span class="tag tag-green">Kotlin</span>
-          <span class="tag tag-green">Jetpack Compose</span>
-          <span class="tag tag-green">Android SDK</span>
-          <span class="tag tag-purple">Swift</span>
-          <span class="tag tag-purple">iOS</span>
-          <span class="tag">React Native</span>
-          <span class="tag">Firebase</span>
-          <span class="tag">Git</span>
+          <span class="tag tag-green">Home Assistant</span>
+          <span class="tag tag-green">ESP32</span>
+          <span class="tag tag-green">Tailscale</span>
+          <span class="tag tag-purple">Docker</span>
+          <span class="tag tag-purple">Python</span>
+          <span class="tag">C / C++</span>
+          <span class="tag">ROS2</span>
+          <span class="tag">PyTorch</span>
         </div>
       </div>
     </div>
@@ -407,9 +405,44 @@
   <div class="container">
     <div class="reveal">
       <div class="section-label">Work</div>
-      <h2>Things I've built.</h2>
+      <h2>Home automation first,<br>then everything else.</h2>
     </div>
     <div class="projects-grid">
+
+      <div class="project-card reveal" style="border-top: 2px solid rgba(74,222,158,0.5); grid-column: 1 / -1;">
+        <div class="project-tag" style="color:#f59e0b;">Home automation · Running</div>
+        <h3>homelab3000</h3>
+        <p>A personal Ubuntu server running Home Assistant with Alexa, Tailscale remote access, Pi-hole, and a Docker media stack with Jellyfin, Radarr, Sonarr and Portainer. Controls the house locally with no cloud dependency.</p>
+        <div class="project-stack">
+          <span class="stack-pill">Home Assistant</span>
+          <span class="stack-pill">Docker</span>
+          <span class="stack-pill">Ubuntu</span>
+          <span class="stack-pill">Tailscale</span>
+          <span class="stack-pill">Pi-hole</span>
+        </div>
+        <a href="homelab.html" class="project-link">Case study →</a>
+      </div>
+
+      <div class="project-card reveal">
+        <div class="project-tag" style="color:#4ade9e;">Home automation · Building</div>
+        <h3>Smart watering system</h3>
+        <p>An ESP32 relay board that switches a pump to water plants over WiFi, with Home Assistant in the loop.</p>
+        <div class="project-stack">
+          <span class="stack-pill">ESP32</span>
+          <span class="stack-pill">Relay board</span>
+          <span class="stack-pill">Home Assistant</span>
+        </div>
+      </div>
+
+      <div class="project-card reveal">
+        <div class="project-tag" style="color:#4ade9e;">Home automation · Exploring</div>
+        <h3>Automated blinds</h3>
+        <p>Motorized blinds driven by an ESP32 and controlled through Home Assistant.</p>
+        <div class="project-stack">
+          <span class="stack-pill">ESP32</span>
+          <span class="stack-pill">Home Assistant</span>
+        </div>
+      </div>
 
       <!-- ── FEATURED (with dedicated pages) ── -->
 
@@ -423,7 +456,7 @@
           <span class="stack-pill">Docker</span>
           <span class="stack-pill">GCP</span>
         </div>
-        <a href="breast-cancer-classifier.html" class="https://github.com/nicholosnauth/breast-cancer-risk-classification-api">Case study →</a>
+        <a href="breast-cancer-classifier.html" class="project-link">Case study →</a>
       </div>
 
       <div class="project-card reveal" style="border-top: 2px solid rgba(74,222,158,0.5);">
@@ -479,121 +512,6 @@
         <a href="wanderland.html" class="project-link">Case study →</a>
       </div>
           
-      <div class="project-card reveal" style="border-top: 2px solid rgba(74,222,158,0.5);">
-        <div class="project-tag" style="color:#f59e0b;">Self-Hosted · Docker · Ubuntu</div>
-        <h3>homelab3000</h3>
-        <p>A personal Ubuntu server running a full Docker-based media and home automation stack — Jellyfin, Radarr, Sonarr, Home Assistant, Portainer — accessible anywhere over Tailscale.</p>
-        <div class="project-stack">
-          <span class="stack-pill">Docker</span>
-          <span class="stack-pill">Ubuntu</span>
-          <span class="stack-pill">Tailscale</span>
-          <span class="stack-pill">Home Assistant</span>
-        </div>
-        <a href="homelab.html" class="project-link">Case study →</a>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- SKILLS -->
-<section id="skills">
-  <div class="container">
-    <div class="reveal">
-      <div class="section-label">Skills</div>
-      <h2>The full stack.</h2>
-    </div>
-    <div class="skills-grid">
-      <div class="skill-group reveal">
-        <div class="skill-group-title">Android</div>
-        <ul>
-          <li>Kotlin</li>
-          <li>Jetpack Compose</li>
-          <li>Android SDK</li>
-          <li>Material Design</li>
-          <li>JUnit · Espresso</li>
-        </ul>
-      </div>
-      <div class="skill-group reveal">
-        <div class="skill-group-title">iOS</div>
-        <ul>
-          <li>Swift</li>
-          <li>Xcode</li>
-          <li>Human Interface Guidelines</li>
-          <li>XCTest</li>
-        </ul>
-      </div>
-      <div class="skill-group reveal">
-        <div class="skill-group-title">Cross-Platform</div>
-        <ul>
-          <li>React Native</li>
-          <li>Firebase</li>
-          <li>SQLite</li>
-          <li>RESTful APIs</li>
-        </ul>
-      </div>
-      <div class="skill-group reveal">
-        <div class="skill-group-title">Web</div>
-        <ul>
-          <li>HTML · CSS · JavaScript</li>
-          <li>PHP</li>
-          <li>MySQL / SQL</li>
-        </ul>
-      </div>
-      <div class="skill-group reveal">
-        <div class="skill-group-title">AI / ML</div>
-        <ul>
-          <li>PyTorch · Keras · TF</li>
-          <li>scikit-learn</li>
-          <li>HuggingFace</li>
-          <li>FastAPI · Docker</li>
-          <li>Google Cloud Run</li>
-        </ul>
-      </div>
-      <div class="skill-group reveal">
-        <div class="skill-group-title">Tools</div>
-        <ul>
-          <li>Android Studio</li>
-          <li>Git · GitHub</li>
-          <li>VS Code · Docker</li>
-          <li>Ubuntu · Linux</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- CONTACT -->
-<section id="contact">
-  <div class="container">
-    <div class="reveal">
-      <div class="section-label">Contact</div>
-      <h2>Let's work together.</h2>
-    </div>
-    <div class="contact-inner">
-      <div class="reveal">
-        <div class="contact-text">
-          <p>Open to new opportunities — whether it's a full-time role, freelance project, or just a conversation about building great apps.</p>
-        </div>
-        <div class="contact-links">
-          <a href="mailto:antonnnauth@gmail.com" class="contact-link">
-            <span class="contact-link-icon">✉</span>
-            antonnnauth@gmail.com
-          </a>
-          <a href="https://www.linkedin.com/in/nicholos-nauth" target="_blank" class="contact-link">
-            <span class="contact-link-icon">in</span>
-            linkedin.com/in/nicholos-nauth
-          </a>
-          <a href="https://github.com/nicholosnauth" target="_blank" class="contact-link">
-            <span class="contact-link-icon">⌥</span>
-            github.com/nicholosnauth
-          </a>
-        </div>
-      </div>
       <form class="contact-form reveal" name="contact" onsubmit="handleSubmit(event)">
         <label>
           <span>Name</span>
